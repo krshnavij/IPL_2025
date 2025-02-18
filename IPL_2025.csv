@@ -1,0 +1,75 @@
+Match,Date,Fixture,Time,Venue
+1,"March 22, Saturday",Kolkata Knight Riders vs Royal Challengers Bengaluru,7:30 PM,Kolkata
+2,"March 23, Sunday",Sunrisers Hyderabad vs Rajasthan Royals,3:30 PM,Hyderabad
+3,"March 23, Sunday",Chennai Super Kings vs Mumbai Indians,7:30 PM,Chennai
+4,"March 24, Monday",Delhi Capitals vs Lucknow Super Giants,7:30 PM,Visakhapatnam
+5,"March 25, Tuesday",Gujarat Titans vs Punjab Kings,7:30 PM,Ahmedabad
+6,"March 26, Wednesday",Rajasthan Royals vs Kolkata Knight Riders,7:30 PM,Guwahati
+7,"March 27, Thursday",Sunrisers Hyderabad vs Lucknow Super Giants,7:30 PM,Hyderabad
+8,"March 28, Friday",Chennai Super Kings vs Royal Challengers Bengaluru,7:30 PM,Chennai
+9,"March 29, Saturday",Gujarat Titans vs Mumbai Indians,7:30 PM,Ahmedabad
+10,"March 30, Sunday",Delhi Capitals vs Sunrisers Hyderabad,3:30 PM,Visakhapatnam
+11,"March 30, Sunday",Rajasthan Royals vs Chennai Super Kings,7:30 PM,Guwahati
+12,"March 31, Monday",Mumbai Indians vs Kolkata Knight Riders,7:30 PM,Mumbai
+13,"April 1, Tuesday",Lucknow Super Giants vs Punjab Kings,7:30 PM,Lucknow
+14,"April 2, Wednesday",Royal Challengers Bengaluru vs Gujarat Titans,7:30 PM,Bengaluru
+15,"April 3, Thursday",Kolkata Knight Riders vs Sunrisers Hyderabad,7:30 PM,Kolkata
+16,"April 4, Friday",Lucknow Super Giants vs Mumbai Indians,7:30 PM,Lucknow
+17,"April 5, Saturday",Chennai Super Kings vs Delhi Capitals,3:30 PM,Chennai
+18,"April 5, Saturday",Punjab Kings vs Rajasthan Royals,7:30 PM,New Chandigarh
+19,"April 6, Sunday",Kolkata Knight Riders vs Lucknow Super Giants,3:30 PM,Kolkata
+20,"April 6, Sunday",Sunrisers Hyderabad vs Gujarat Titans,7:30 PM,Hyderabad
+21,"April 7, Monday",Mumbai Indians vs Royal Challengers Bengaluru,7:30 PM,Mumbai
+22,"April 8, Tuesday",Punjab Kings vs Chennai Super Kings,7:30 PM,New Chandigarh
+23,"April 9, Wednesday",Gujarat Titans vs Rajasthan Royals,7:30 PM,Ahmedabad
+24,"April 10, Thursday",Royal Challengers Bengaluru vs Delhi Capitals,7:30 PM,Bengaluru
+25,"April 11, Friday",Chennai Super Kings vs Kolkata Knight Riders,7:30 PM,Chennai
+26,"April 12, Saturday",Lucknow Super Giants vs Gujarat Titans,3:30 PM,Lucknow
+27,"April 12, Saturday",Sunrisers Hyderabad vs Punjab Kings,7:30 PM,Hyderabad
+28,"April 13, Sunday",Rajasthan Royals vs Royal Challengers Bengaluru,3:30 PM,Jaipur
+29,"April 13, Sunday",Delhi Capitals vs Mumbai Indians,7:30 PM,Delhi
+30,"April 14, Monday",Lucknow Super Giants vs Chennai Super Kings,7:30 PM,Lucknow
+31,"April 15, Tuesday",Punjab Kings vs Kolkata Knight Riders,7:30 PM,New Chandigarh
+32,"April 16, Wednesday",Delhi Capitals vs Rajasthan Royals,7:30 PM,Delhi
+33,"April 17, Thursday",Mumbai Indians vs Sunrisers Hyderabad,7:30 PM,Mumbai
+34,"April 18, Friday",Royal Challengers Bengaluru vs Punjab Kings,7:30 PM,Bengaluru
+35,"April 19, Saturday",Gujarat Titans vs Delhi Capitals,3:30 PM,Ahmedabad
+36,"April 19, Saturday",Rajasthan Royals vs Lucknow Super Giants,7:30 PM,Jaipur
+37,"April 20, Sunday",Punjab Kings vs Royal Challengers Bengaluru,3:30 PM,New Chandigarh
+38,"April 20, Sunday",Mumbai Indians vs Chennai Super Kings,7:30 PM,Mumbai
+39,"April 21, Monday",Kolkata Knight Riders vs Gujarat Titans,7:30 PM,Kolkata
+40,"April 22, Tuesday",Lucknow Super Giants vs Delhi Capitals,7:30 PM,Lucknow
+41,"April 23, Wednesday",Sunrisers Hyderabad vs Mumbai Indians,7:30 PM,Hyderabad
+42,"April 24, Thursday",Royal Challengers Bengaluru vs Rajasthan Royals,7:30 PM,Bengaluru
+43,"April 25, Friday",Chennai Super Kings vs Sunrisers Hyderabad,7:30 PM,Chennai
+44,"April 26, Saturday",Kolkata Knight Riders vs Punjab Kings,7:30 PM,Kolkata
+45,"April 27, Sunday",Mumbai Indians vs Lucknow Super Giants,3:30 PM,Mumbai
+46,"April 27, Sunday",Delhi Capitals vs Royal Challengers Bengaluru,7:30 PM,Delhi
+47,"April 28, Monday",Rajasthan Royals vs Gujarat Titans,7:30 PM,Jaipur
+48,"April 29, Tuesday",Delhi Capitals vs Kolkata Knight Riders,7:30 PM,Delhi
+49,"April 30, Wednesday",Chennai Super Kings vs Punjab Kings,7:30 PM,Chennai
+50,"May 1, Thursday",Rajasthan Royals vs Mumbai Indians,7:30 PM,Jaipur
+51,"May 2, Friday",Gujarat Titans vs Sunrisers Hyderabad,7:30 PM,Ahmedabad
+52,"May 3, Saturday",Royal Challengers Bengaluru vs Chennai Super Kings,7:30 PM,Bengaluru
+53,"May 4, Sunday",Kolkata Knight Riders vs Rajasthan Royals,3:30 PM,Kolkata
+54,"May 4, Sunday",Punjab Kings vs Lucknow Super Giants,7:30 PM,Dharamsala
+55,"May 5, Monday",Sunrisers Hyderabad vs Delhi Capitals,7:30 PM,Hyderabad
+56,"May 6, Tuesday",Mumbai Indians vs Gujarat Titans,7:30 PM,Mumbai
+57,"May 7, Wednesday",Kolkata Knight Riders vs Chennai Super Kings,7:30 PM,Kolkata
+58,"May 8, Thursday",Punjab Kings vs Delhi Capitals,7:30 PM,Dharamsala
+59,"May 9, Friday",Lucknow Super Giants vs Royal Challengers Bengaluru,7:30 PM,Lucknow
+60,"May 10, Saturday",Sunrisers Hyderabad vs Kolkata Knight Riders,7:30 PM,Hyderabad
+61,"May 11, Sunday",Punjab Kings vs Mumbai Indians,3:30 PM,Dharamsala
+62,"May 11, Sunday",Delhi Capitals vs Gujarat Titans,7:30 PM,Delhi
+63,"May 12, Monday",Chennai Super Kings vs Rajasthan Royals,7:30 PM,Chennai
+64,"May 13, Tuesday",Royal Challengers Bengaluru vs Sunrisers Hyderabad,7:30 PM,Bengaluru
+65,"May 14, Wednesday",Gujarat Titans vs Lucknow Super Giants,7:30 PM,Ahmedabad
+66,"May 15, Thursday",Mumbai Indians vs Delhi Capitals,7:30 PM,Mumbai
+67,"May 16, Friday",Rajasthan Royals vs Punjab Kings,7:30 PM,Jaipur
+68,"May 17, Saturday",Royal Challengers Bengaluru vs Kolkata Knight Riders,7:30 PM,Bengaluru
+69,"May 18, Sunday",Gujarat Titans vs Chennai Super Kings,3:30 PM,Ahmedabad
+70,"May 18, Sunday",Lucknow Super Giants vs Sunrisers Hyderabad,7:30 PM,Lucknow
+71,"May 20, Tuesday",Qualifier 1,7:30 PM,Hyderabad
+72,"May 21, Wednesday",Eliminator,7:30 PM,Hyderabad
+73,"May 23, Friday",Qualifier 2,7:30 PM,Kolkata
+74,"May 25, Sunday",Final,7:30 PM,Kolkata
