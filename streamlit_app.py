@@ -9,7 +9,7 @@ from datetime import datetime
 # Placeholder for user credentials (REPLACE with your actual database or authentication)
 user_credentials = {
     "vijay": "password",
-    "nandini": "secret",
+    "nandini": "nila",
     "VIJAY": "password",
     # ... more users
 }
