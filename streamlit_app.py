@@ -66,7 +66,7 @@ elif "password_reset" in st.session_state and st.session_state.password_reset:
 else:  # User is logged in, show the main app
     # --- CONFIGS ---
     DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
-    GITHUB_TOKEN = "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"  # Replace with your GitHub token
+    GITHUB_TOKEN = "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"  # Replace with your GitHub token
     REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
 
     # --- PAGE SETUP ---
