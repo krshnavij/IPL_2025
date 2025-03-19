@@ -104,16 +104,16 @@ else:  # User is logged in, show the main app
     # --- LOAD AND FILTER DATA ---
     try:
         data = pd.read_csv(DATA_URL)
-        data['Date'] = data['Date'].str.strip()
-        data['Date'] = data['Date'].apply(parse_date)
-        data['Date'] = data['Date'].dt.date
+        data["Date"] = data["Date"].str.strip()
+        data["Date"] = data["Date"].apply(parse_date)
+        data["Date"] = data["Date"].dt.date
         selected_date_datetime = pd.to_datetime(selected_date).date()
-        filtered_data = data[data['Date'] == selected_date_datetime]
+        filtered_data = data[data["Date"] == selected_date_datetime]
         if not filtered_data.empty:
             selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
             st.text(f"Selected Date: {selected_date_str}")
             st.dataframe(filtered_data)
-            fixtures_on_date = filtered_data['Fixture'].tolist()
+            fixtures_on_date = filtered_data["Fixture"].tolist()
 
             # --- PREDICTION LOGIC ---
             if "predictions" not in st.session_state:
@@ -216,19 +216,20 @@ else:  # User is logged in, show the main app
 
             # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
-                st.subheader("All Predictions")
+                st.subheader(f"Predictions for {selected_date_str}")
                 all_predictions = []
                 for user, user_predictions in predictions.items():
                     for match, prediction in user_predictions.items():
-                        all_predictions.append(
-                            {
-                                "User": user,
-                                "Match": match,
-                                "Toss Prediction": prediction["Toss"],
-                                "Match Prediction": prediction["Match Winner"],
-                                "Date": prediction["Date"],
-                            }
-                        )
+                        if prediction["Date"] == selected_date_str:  # Filter by selected date
+                            all_predictions.append(
+                                {
+                                    "User": user,
+                                    "Match": match,
+                                    "Toss Prediction": prediction["Toss"],
+                                    "Match Prediction": prediction["Match Winner"],
+                                    "Date": prediction["Date"],
+                                }
+                            )
 
                 # Create a DataFrame with columns for User, Match, Toss Prediction, Match Prediction, and Date
                 predictions_df = pd.DataFrame(all_predictions)
