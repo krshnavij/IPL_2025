@@ -67,9 +67,7 @@ if st.session_state.user_name is None:  # Show login form
         if st.button("Request Reset"):
             if forgot_username.lower() in [user.lower() for user in user_credentials]:
                 password_reset_requests[forgot_username.lower()] = True
-                st.success(
-                    "Password reset request sent (placeholder). Check your email (not implemented)."
-                )
+                st.success("Password reset request sent (placeholder). Check your email (not implemented).")
             else:
                 st.error("Username not found.")
 elif "password_reset" in st.session_state and st.session_state.password_reset:
@@ -106,16 +104,16 @@ else:  # User is logged in, show the main app
     # --- LOAD AND FILTER DATA ---
     try:
         data = pd.read_csv(DATA_URL)
-        data["Date"] = data["Date"].str.strip()
-        data["Date"] = data["Date"].apply(parse_date)
-        data["Date"] = data["Date"].dt.date
+        data['Date'] = data['Date'].str.strip()
+        data['Date'] = data['Date'].apply(parse_date)
+        data['Date'] = data['Date'].dt.date
         selected_date_datetime = pd.to_datetime(selected_date).date()
-        filtered_data = data[data["Date"] == selected_date_datetime]
+        filtered_data = data[data['Date'] == selected_date_datetime]
         if not filtered_data.empty:
             selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
             st.text(f"Selected Date: {selected_date_str}")
             st.dataframe(filtered_data)
-            fixtures_on_date = filtered_data["Fixture"].tolist()
+            fixtures_on_date = filtered_data['Fixture'].tolist()
 
             # --- PREDICTION LOGIC ---
             if "predictions" not in st.session_state:
@@ -130,12 +128,8 @@ else:  # User is logged in, show the main app
 
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
-                            toss_winner_display = st.selectbox(
-                                "Toss Winner:", abbreviated_teams, key=f"toss_{i}"
-                            )
-                            match_winner_display = st.selectbox(
-                                "Match Winner:", abbreviated_teams, key=f"match_{i}"
-                            )
+                            toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
+                            match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
                             submitted = st.form_submit_button("Submit and Update Excel")
                             if submitted:
                                 if st.session_state.user_name not in predictions:
@@ -215,7 +209,7 @@ else:  # User is logged in, show the main app
                                         )
 
                                     st.success(
-                                        "Prediction submitted"
+                                        "Prediction submitted and updated to user-specific Excel on GitHub!"
                                     )
                                 except Exception as e:
                                     st.error(f"Error updating predictions: {e}")
@@ -247,12 +241,8 @@ else:  # User is logged in, show the main app
                     return " vs ".join(abbreviated_teams)
 
                 predictions_df.index = predictions_df.index.to_series().apply(abbreviate_match)
-                predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(
-                    abbreviate_name
-                )
-                predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(
-                    abbreviate_name
-                )
+                predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(abbreviate_name)
+                predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(abbreviate_name)
 
                 # Display predictions
                 st.dataframe(predictions_df)
