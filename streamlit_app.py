@@ -130,7 +130,7 @@ else:  # User is logged in, show the main app
                         if len(teams) == 2:
                             toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
-                            submitted = st.form_submit_button("Submit and Update Excel")
+                            submitted = st.form_submit_button("Submit Predictions")
                             if submitted:
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
@@ -209,7 +209,7 @@ else:  # User is logged in, show the main app
                                         )
 
                                     st.success(
-                                        "Prediction submitted and updated to user-specific Excel on GitHub!"
+                                        "Prediction submitted!"
                                     )
                                 except Exception as e:
                                     st.error(f"Error updating predictions: {e}")
