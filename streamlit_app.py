@@ -56,8 +56,6 @@ else:  # User is logged in, show the main app
     # --- CONFIGS ---
     DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
     PREDICTIONS_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/predictions.xlsx"  # Replace with your raw GitHub URL
-    # GITHUB_TOKEN = "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"  # Replace with your GitHub token
-    GITHUB_TOKEN = "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"
     REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
     FILE_PATH = "predictions.xlsx"
     # --- PAGE SETUP ---
