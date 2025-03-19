@@ -66,7 +66,7 @@ elif "password_reset" in st.session_state and st.session_state.password_reset:
 else:  # User is logged in, show the main app
     # --- CONFIGS ---
     DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
-    GITHUB_TOKEN = "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"  # Replace with your GitHub token
+    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Fetch token from Streamlit Secrets
     REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
 
     # --- PAGE SETUP ---
