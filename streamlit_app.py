@@ -25,7 +25,7 @@ team_name_mapping = {
     "Kolkata Knight Riders": "KKR",
     "Chennai Super Kings": "CSK",
     "Mumbai Indians": "MI",
-    "Royal Challengers Bangalore": "RCB",
+    "Royal Challengers Bengaluru": "RCB",
     "Sunrisers Hyderabad": "SRH",
     "Delhi Capitals": "DC",
     "Punjab Kings": "PBKS",
