@@ -5,10 +5,6 @@ import requests
 from github import Github
 import openpyxl
 from datetime import datetime
-# Placeholder for user credentials (REPLACE with your actual database or authentication)
-user_credentials = {
-    "vijay": "password",
-    "nandini": "secret",
     "VIJAY": "password",
     # ... more users
 }
@@ -56,8 +52,6 @@ else:  # User is logged in, show the main app
     # --- CONFIGS ---
     DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
     PREDICTIONS_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/predictions.xlsx"  # Replace with your raw GitHub URL
-    REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
-    FILE_PATH = "predictions.xlsx"
     # --- PAGE SETUP ---
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
     st.title("🏏 IPL PREDICTION 2025")
@@ -94,7 +88,6 @@ else:  # User is logged in, show the main app
                         if len(teams) == 2:
                             toss_winner_options = teams
                             match_winner_options = teams
-                            col1, col2 = st.columns(2)
                             with col1:
                                 toss_winner_options_display = ["".join(word[0] for word in team.split()) for team in toss_winner_options]
                                 toss_winner_display = st.selectbox("Toss Winner:", toss_winner_options_display)
@@ -103,19 +96,13 @@ else:  # User is logged in, show the main app
                                 match_winner_options_display = ["".join(word[0] for word in team.split()) for team in match_winner_options]
                                 match_winner_display = st.selectbox("Match Winner:", match_winner_options_display)
                                 match_winner = match_winner_options[match_winner_options_display.index(match_winner_display)]
-                            submitted = st.form_submit_button("Submit Predictions")
-                            if submitted:
-                                if st.session_state.user_name not in predictions:
-                                    predictions[st.session_state.user_name] = {}
+
                                 predictions[st.session_state.user_name][fixture] = {
                                     "Toss": toss_winner,
                                     "Match Winner": match_winner,
                                     "Date": selected_date_str
                                 }
-                                st.session_state.predictions = predictions
-                                st.rerun()
-                    st.write("---")
-            # Part 2: Display Predictions, Update Excel, Logout
+
             # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
                 predictions_for_date = {}
@@ -139,6 +126,7 @@ else:  # User is logged in, show the main app
                     predictions_df = predictions_df.pivot_table(index="Match", columns=None, aggfunc='first').fillna("")
                     st.subheader("All Predictions")
                     st.dataframe(predictions_df)
+
             # Update Excel on GitHub
             if st.button("Update Predictions to Excel"):
                 try:
@@ -160,12 +148,14 @@ else:  # User is logged in, show the main app
                             "Match Winner": prediction['Match Winner']
                         })
                     new_df = pd.DataFrame(new_data)
+
                     if not existing_df.empty:
                         merged_df = pd.concat([existing_df, new_df], ignore_index=True)
                         merged_df = merged_df.drop_duplicates(subset=['Match', 'Date'], keep='last')
                         updated_df = merged_df
                     else:
                         updated_df = new_df
+
                     output = io.BytesIO()
                     with pd.ExcelWriter(output, engine='openpyxl') as writer:
                         updated_df.to_excel(writer, sheet_name=st.session_state.user_name.lower(), index=False)
