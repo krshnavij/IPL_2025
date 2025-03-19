@@ -25,7 +25,7 @@ team_name_mapping = {
     "Kolkata Knight Riders": "KKR",
     "Chennai Super Kings": "CSK",
     "Mumbai Indians": "MI",
-    "Royal Challengers Bengaluru": "RCB",
+    "Royal Challengers Bangalore": "RCB",
     "Sunrisers Hyderabad": "SRH",
     "Delhi Capitals": "DC",
     "Punjab Kings": "PBKS",
@@ -34,6 +34,10 @@ team_name_mapping = {
     "Gujarat Titans": "GT",
     # Add other teams if needed
 }
+
+# Helper function to abbreviate team names
+def abbreviate_name(name):
+    return team_name_mapping.get(name.strip(), name.strip())
 
 # Placeholder for password reset requests
 password_reset_requests = {}
@@ -119,11 +123,13 @@ else:  # User is logged in, show the main app
             for i, fixture in enumerate(fixtures_on_date):
                 with st.container():
                     st.subheader(f"Fixture: {fixture}")
+                    teams = fixture.split(" vs ")
+                    abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
+
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
-                        teams = fixture.split(" vs ")
                         if len(teams) == 2:
-                            toss_winner_display = st.selectbox("Toss Winner:", teams, key=f"toss_{i}")
-                            match_winner_display = st.selectbox("Match Winner:", teams, key=f"match_{i}")
+                            toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
+                            match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
                             submitted = st.form_submit_button("Submit Predictions")
                             if submitted:
                                 if st.session_state.user_name not in predictions:
@@ -164,9 +170,6 @@ else:  # User is logged in, show the main app
                     predictions_df = predictions_df.set_index("Match")  # Set Match as index for better readability
 
                     # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
-                    def abbreviate_name(name):
-                        return team_name_mapping.get(name.strip(), name.strip())
-
                     def abbreviate_match(match):
                         teams = match.split(" vs ")
                         abbreviated_teams = [abbreviate_name(team) for team in teams]
