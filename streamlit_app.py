@@ -25,7 +25,7 @@ team_name_mapping = {
     "Kolkata Knight Riders": "KKR",
     "Chennai Super Kings": "CSK",
     "Mumbai Indians": "MI",
-    "Royal Challengers Bengaluru": "RCB",
+    "Royal Challengers Bangalore": "RCB",
     "Sunrisers Hyderabad": "SRH",
     "Delhi Capitals": "DC",
     "Punjab Kings": "PBKS",
@@ -163,14 +163,19 @@ else:  # User is logged in, show the main app
                     predictions_df = pd.DataFrame(all_predictions)
                     predictions_df = predictions_df.set_index("Match")  # Set Match as index for better readability
 
-                    # Replace full team names with abbreviations in the Match column
+                    # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
+                    def abbreviate_name(name):
+                        return team_name_mapping.get(name.strip(), name.strip())
+
                     def abbreviate_match(match):
                         teams = match.split(" vs ")
-                        abbreviated_teams = [team_name_mapping.get(team.strip(), team.strip()) for team in teams]
+                        abbreviated_teams = [abbreviate_name(team) for team in teams]
                         return " vs ".join(abbreviated_teams)
 
                     # Apply abbreviation logic
                     predictions_df.index = predictions_df.index.to_series().apply(abbreviate_match)
+                    predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(abbreviate_name)
+                    predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(abbreviate_name)
 
                     # Display predictions
                     st.subheader("All Predictions")
@@ -200,9 +205,9 @@ else:  # User is logged in, show the main app
                             for match, prediction in predictions[st.session_state.user_name].items():
                                 new_data.append({
                                     "Date": prediction['Date'],
-                                    "Match": match,
-                                    "Toss": prediction['Toss'],
-                                    "Match Winner": prediction['Match Winner']
+                                    "Match": abbreviate_match(match),
+                                    "Toss": abbreviate_name(prediction['Toss']),
+                                    "Match Winner": abbreviate_name(prediction['Match Winner'])
                                 })
                             new_df = pd.DataFrame(new_data)
 
