@@ -25,7 +25,7 @@ team_name_mapping = {
     "Kolkata Knight Riders": "KKR",
     "Chennai Super Kings": "CSK",
     "Mumbai Indians": "MI",
-    "Royal Challengers Bangalore": "RCB",
+    "Royal Challengers Bengaluru": "RCB",
     "Sunrisers Hyderabad": "SRH",
     "Delhi Capitals": "DC",
     "Punjab Kings": "PBKS",
@@ -67,7 +67,9 @@ if st.session_state.user_name is None:  # Show login form
         if st.button("Request Reset"):
             if forgot_username.lower() in [user.lower() for user in user_credentials]:
                 password_reset_requests[forgot_username.lower()] = True
-                st.success("Password reset request sent (placeholder). Check your email (not implemented).")
+                st.success(
+                    "Password reset request sent (placeholder). Check your email (not implemented)."
+                )
             else:
                 st.error("Username not found.")
 elif "password_reset" in st.session_state and st.session_state.password_reset:
@@ -104,16 +106,16 @@ else:  # User is logged in, show the main app
     # --- LOAD AND FILTER DATA ---
     try:
         data = pd.read_csv(DATA_URL)
-        data['Date'] = data['Date'].str.strip()
-        data['Date'] = data['Date'].apply(parse_date)
-        data['Date'] = data['Date'].dt.date
+        data["Date"] = data["Date"].str.strip()
+        data["Date"] = data["Date"].apply(parse_date)
+        data["Date"] = data["Date"].dt.date
         selected_date_datetime = pd.to_datetime(selected_date).date()
-        filtered_data = data[data['Date'] == selected_date_datetime]
+        filtered_data = data[data["Date"] == selected_date_datetime]
         if not filtered_data.empty:
             selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
             st.text(f"Selected Date: {selected_date_str}")
             st.dataframe(filtered_data)
-            fixtures_on_date = filtered_data['Fixture'].tolist()
+            fixtures_on_date = filtered_data["Fixture"].tolist()
 
             # --- PREDICTION LOGIC ---
             if "predictions" not in st.session_state:
@@ -128,8 +130,12 @@ else:  # User is logged in, show the main app
 
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
-                            toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
-                            match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
+                            toss_winner_display = st.selectbox(
+                                "Toss Winner:", abbreviated_teams, key=f"toss_{i}"
+                            )
+                            match_winner_display = st.selectbox(
+                                "Match Winner:", abbreviated_teams, key=f"match_{i}"
+                            )
                             submitted = st.form_submit_button("Submit and Update Excel")
                             if submitted:
                                 if st.session_state.user_name not in predictions:
@@ -137,7 +143,7 @@ else:  # User is logged in, show the main app
                                 predictions[st.session_state.user_name][fixture] = {
                                     "Toss": toss_winner_display,
                                     "Match Winner": match_winner_display,
-                                    "Date": selected_date_str
+                                    "Date": selected_date_str,
                                 }
                                 st.session_state.predictions = predictions
 
@@ -161,19 +167,27 @@ else:  # User is logged in, show the main app
 
                                     # Prepare new predictions data
                                     new_data = []
-                                    for match, prediction in predictions[st.session_state.user_name].items():
-                                        new_data.append({
-                                            "Date": prediction['Date'],
-                                            "Match": match,
-                                            "Toss": prediction['Toss'],
-                                            "Match Winner": prediction['Match Winner']
-                                        })
+                                    for match, prediction in predictions[
+                                        st.session_state.user_name
+                                    ].items():
+                                        new_data.append(
+                                            {
+                                                "Date": prediction["Date"],
+                                                "Match": match,
+                                                "Toss": prediction["Toss"],
+                                                "Match Winner": prediction["Match Winner"],
+                                            }
+                                        )
                                     new_df = pd.DataFrame(new_data)
 
                                     # Merge old and new data
                                     if not existing_df.empty:
-                                        merged_df = pd.concat([existing_df, new_df], ignore_index=True)
-                                        merged_df = merged_df.drop_duplicates(subset=["Match", "Date"], keep="last")
+                                        merged_df = pd.concat(
+                                            [existing_df, new_df], ignore_index=True
+                                        )
+                                        merged_df = merged_df.drop_duplicates(
+                                            subset=["Match", "Date"], keep="last"
+                                        )
                                         updated_df = merged_df
                                     else:
                                         updated_df = new_df
@@ -187,14 +201,61 @@ else:  # User is logged in, show the main app
 
                                     # Update or create the file on GitHub
                                     try:
-                                        repo.update_file(user_file_path, "Update predictions", updated_excel_content, file.sha)
+                                        repo.update_file(
+                                            user_file_path,
+                                            "Update predictions",
+                                            updated_excel_content,
+                                            file.sha,
+                                        )
                                     except Exception:
-                                        repo.create_file(user_file_path, "Create predictions file", updated_excel_content)
+                                        repo.create_file(
+                                            user_file_path,
+                                            "Create predictions file",
+                                            updated_excel_content,
+                                        )
 
-                                    st.success("Prediction submitted and updated to user-specific Excel on GitHub!")
+                                    st.success(
+                                        "Prediction submitted"
+                                    )
                                 except Exception as e:
                                     st.error(f"Error updating predictions: {e}")
-                    st.write("---")
+
+            # --- DISPLAY PREDICTIONS TABLE ---
+            if predictions:
+                st.subheader("All Predictions")
+                all_predictions = []
+                for user, user_predictions in predictions.items():
+                    for match, prediction in user_predictions.items():
+                        all_predictions.append(
+                            {
+                                "User": user,
+                                "Match": match,
+                                "Toss Prediction": prediction["Toss"],
+                                "Match Prediction": prediction["Match Winner"],
+                                "Date": prediction["Date"],
+                            }
+                        )
+
+                # Create a DataFrame with columns for User, Match, Toss Prediction, Match Prediction, and Date
+                predictions_df = pd.DataFrame(all_predictions)
+                predictions_df = predictions_df.set_index("Match")  # Set Match as index for better readability
+
+                # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
+                def abbreviate_match(match):
+                    teams = match.split(" vs ")
+                    abbreviated_teams = [abbreviate_name(team) for team in teams]
+                    return " vs ".join(abbreviated_teams)
+
+                predictions_df.index = predictions_df.index.to_series().apply(abbreviate_match)
+                predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(
+                    abbreviate_name
+                )
+                predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(
+                    abbreviate_name
+                )
+
+                # Display predictions
+                st.dataframe(predictions_df)
         else:
             st.write("No data available for the selected date.")
     except FileNotFoundError:
