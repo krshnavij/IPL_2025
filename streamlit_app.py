@@ -4,7 +4,7 @@ import io
 import requests
 from github import Github
 import openpyxl
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 # Placeholder for user credentials
 user_credentials = {
@@ -137,15 +137,16 @@ else:  # User is logged in, show the main app
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
                             submitted = st.form_submit_button("Submit Predictions")
                             if submitted:
-                                now = datetime.now()
-                                submission_time = now.strftime("%H:%M:%S")
+                                now_utc = datetime.now(timezone.utc)
+                                ist_timezone = timezone(timedelta(hours=5, minutes=30))
+                                submission_time_ist = now_utc.astimezone(ist_timezone).strftime("%H:%M:%S %Z%z")
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
                                 predictions[st.session_state.user_name][fixture] = {
                                     "Toss": toss_winner_display,
                                     "Match Winner": match_winner_display,
                                     "Date": selected_date_str,
-                                    "Time": submission_time,
+                                    "Time": submission_time_ist,
                                 }
                                 st.session_state.predictions = predictions
 
