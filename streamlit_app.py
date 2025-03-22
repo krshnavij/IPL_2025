@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 from github import Github
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 
 # Placeholder for user credentials
 user_credentials = {
@@ -34,6 +34,7 @@ team_name_mapping = {
 # Helper function to abbreviate team names
 def abbreviate_name(name):
     return team_name_mapping.get(name.strip(), name.strip())
+
 
 # Placeholder for password reset requests
 password_reset_requests = {}
@@ -86,13 +87,23 @@ else:  # User is logged in, show the main app
             return pd.NaT
 
     try:
+        # Load the CSV file
         data = pd.read_csv(DATA_URL)
         data["Date"] = data["Date"].str.strip()
         data["Date"] = data["Date"].apply(parse_date)
         data["Date"] = data["Date"].dt.date
         selected_date_datetime = pd.to_datetime(selected_date).date()
+
+        # Parse the Time column
+        data["Time"] = pd.to_datetime(data["Time"], format="%I:%M%p").dt.time
+
+        # Filter data by selected date
         filtered_data = data[data["Date"] == selected_date_datetime]
 
+        # Sort fixtures by time
+        filtered_data = filtered_data.sort_values(by="Time")
+
+        # Abbreviate team names in the Fixture column
         filtered_data["Fixture"] = filtered_data["Fixture"].apply(
             lambda fixture: " vs ".join([abbreviate_name(team) for team in fixture.split(" vs ")])
         )
@@ -101,15 +112,16 @@ else:  # User is logged in, show the main app
             selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
             st.text(f"Selected Date: {selected_date_str}")
             st.dataframe(filtered_data)
-            fixtures_on_date = filtered_data["Fixture"].tolist()
+            fixtures_on_date = filtered_data[["Fixture", "Time"]].values.tolist()
 
+            # --- PREDICTION LOGIC ---
             if "predictions" not in st.session_state:
                 st.session_state.predictions = {}
             predictions = st.session_state.predictions
 
-            for i, fixture in enumerate(fixtures_on_date):
+            for i, (fixture, match_time) in enumerate(fixtures_on_date):
                 with st.container():
-                    st.subheader(f"Fixture: {fixture}")
+                    st.subheader(f"Fixture: {fixture} (Start Time: {match_time})")
                     teams = fixture.split(" vs ")
                     abbreviated_teams = [abbreviate_name(team) for team in teams]
 
@@ -126,11 +138,11 @@ else:  # User is logged in, show the main app
                                 submission_time_minute = ist_time.minute
 
                                 # Late submission cutoff times
-                                if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute > 0)):
-                                    st.warning("Submission time for the first match exceeded 3:00 PM IST. Your prediction will not be recorded.")
+                                if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute > 30)):
+                                    st.warning("Submission time for the first match exceeded 3:30 PM IST. Your prediction will not be recorded.")
                                     continue
-                                elif i == 1 and (submission_time_hour > 13 or (submission_time_hour == 13 and submission_time_minute > 0)):
-                                    st.warning("Submission time for the second match exceeded 7:00 PM IST. Your prediction will not be recorded.")
+                                elif i == 1 and (submission_time_hour > 13,10 or (submission_time_hour == 13 and submission_time_minute > 10)):
+                                    st.warning("Submission time for the second match exceeded 7:30 PM IST. Your prediction will not be recorded.")
                                     continue
 
                                 # Update predictions only if submission is valid
@@ -206,6 +218,7 @@ else:  # User is logged in, show the main app
                                 except Exception as e:
                                     st.error(f"Error updating predictions: {e}")
 
+            # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
                 st.subheader(f"Predictions for {selected_date_str}")
                 all_predictions = []
