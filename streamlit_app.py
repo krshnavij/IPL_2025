@@ -137,12 +137,15 @@ else:  # User is logged in, show the main app
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
                             submitted = st.form_submit_button("Submit Predictions")
                             if submitted:
+                                now = datetime.now()
+                                submission_time = now.strftime("%H:%M:%S")
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
                                 predictions[st.session_state.user_name][fixture] = {
                                     "Toss": toss_winner_display,
                                     "Match Winner": match_winner_display,
                                     "Date": selected_date_str,
+                                    "Time": submission_time,
                                 }
                                 st.session_state.predictions = predictions
 
@@ -175,6 +178,7 @@ else:  # User is logged in, show the main app
                                                 "Match": match,
                                                 "Toss": prediction["Toss"],
                                                 "Match Winner": prediction["Match Winner"],
+                                                "Time": prediction["Time"],
                                             }
                                         )
                                     new_df = pd.DataFrame(new_data)
@@ -233,6 +237,7 @@ else:  # User is logged in, show the main app
                                     "Toss Prediction": prediction["Toss"],
                                     "Match Prediction": prediction["Match Winner"],
                                     "Date": prediction["Date"],
+                                    "Time": prediction["Time"],
                                 }
                             )
 
