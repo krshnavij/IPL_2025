@@ -125,12 +125,12 @@ else:  # User is logged in, show the main app
                                 submission_time_hour = ist_time.hour
                                 submission_time_minute = ist_time.minute
 
-                                # Late submission check (12:17 PM for testing)
-                                if i == 0 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 17)):
-                                    st.warning("Submission time for the first match exceeded 12:17 PM IST. Your prediction will not be recorded.")
+                                # Late submission check (12:20 PM for testing)
+                                if i == 0 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 20)):
+                                    st.warning("Submission time for the first match exceeded 12:20 PM IST. Your prediction will not be recorded.")
                                     continue
-                                elif i == 1 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 17)):
-                                    st.warning("Submission time for the second match exceeded 12:17 PM IST. Your prediction will not be recorded.")
+                                elif i == 1 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 20)):
+                                    st.warning("Submission time for the second match exceeded 12:20 PM IST. Your prediction will not be recorded.")
                                     continue
 
                                 # Update predictions only if submission is valid
