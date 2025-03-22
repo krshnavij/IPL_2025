@@ -133,7 +133,7 @@ else:  # User is logged in, show the main app
 
                     # Define match-specific cut-off times
                     cutoff_time_first_match = time(15, 30)  # 3:30 PM
-                    cutoff_time_second_match = time(19, 0)  # 7:00 PM
+                    cutoff_time_second_match = time(10, 0)  # 7:00 PM
 
                     # Get current time
                     current_time = datetime.now().time()
