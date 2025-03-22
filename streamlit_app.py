@@ -5,18 +5,8 @@ import requests
 from github import Github
 import openpyxl
 from datetime import datetime, date
-import time
 
-# --- Display live time ---
-live_time_placeholder = st.empty()  # Create an empty container for live time
-
-def update_live_time():
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Format live time
-    live_time_placeholder.markdown(f"### Current Time: {current_time}")  # Update the placeholder
-
-update_live_time()  # Call the live time updater once
-
-# --- Placeholder for user credentials ---
+# Placeholder for user credentials
 user_credentials = {
     "vijay": "nila",
     "nandini": "secret",
@@ -30,7 +20,7 @@ user_credentials = {
     # Add more users if needed
 }
 
-# --- Team name abbreviations ---
+# Team name abbreviations
 team_name_mapping = {
     "Kolkata Knight Riders": "KKR",
     "Chennai Super Kings": "CSK",
