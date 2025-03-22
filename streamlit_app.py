@@ -162,10 +162,13 @@ else:  # User is logged in, show the main app
                                     for match, prediction in predictions[
                                         st.session_state.user_name
                                     ].items():
+                                        teams = match.split(" vs ")
+                                        abbreviated_match = f"{abbreviate_name(teams[0])} vs {abbreviate_name(teams[1])}"
+
                                         new_data.append(
                                             {
                                                 "Date": prediction["Date"],
-                                                "Match": match,
+                                                "Match": abbreviated_match,
                                                 "Toss": prediction["Toss"],
                                                 "Match Winner": prediction["Match Winner"],
                                                 "Time": prediction["Time"],
@@ -220,10 +223,13 @@ else:  # User is logged in, show the main app
                 for user, user_predictions in predictions.items():
                     for match, prediction in user_predictions.items():
                         if prediction["Date"] == selected_date_str:  # Filter by selected date
+                            teams = match.split(" vs ")
+                            abbreviated_match = f"{abbreviate_name(teams[0])} vs {abbreviate_name(teams[1])}"
+
                             all_predictions.append(
                                 {
                                     "User": user,
-                                    "Match": match,
+                                    "Match": abbreviated_match,
                                     "Toss Prediction": prediction["Toss"],
                                     "Match Prediction": prediction["Match Winner"],
                                     "Date": prediction["Date"],
