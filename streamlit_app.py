@@ -131,11 +131,23 @@ else:  # User is logged in, show the main app
                     teams = fixture.split(" vs ")
                     abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
 
+                    # Extract the match time from the filtered data
+                    match_time_str = filtered_data.loc[filtered_data["Fixture"] == fixture, "Time"].values[0]
+                    match_datetime = datetime.strptime(f"{selected_date_str} {match_time_str}", "%d-%m-%Y %H:%M")
+                    current_time = datetime.now()
+
+                    # Check if the match time has passed to disable the submit button
+                    is_disabled = current_time >= match_datetime
+
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
                             toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
-                            submitted = st.form_submit_button("Submit Predictions")
+                            submitted = st.form_submit_button("Submit Predictions", disabled=is_disabled)
+
+                            if is_disabled:
+                                st.warning(f"Match time has passed. Predictions for {fixture} are closed.")
+
                             if submitted:
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
