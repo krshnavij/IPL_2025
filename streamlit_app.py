@@ -37,6 +37,12 @@ team_name_mapping = {
 def abbreviate_name(name):
     return team_name_mapping.get(name.strip(), name.strip())
 
+# Helper function to abbreviate match fixture
+def abbreviate_match(match):
+    teams = match.split(" vs ")
+    abbreviated_teams = [abbreviate_name(team) for team in teams]
+    return " vs ".join(abbreviated_teams)
+
 # Placeholder for password reset requests
 password_reset_requests = {}
 
@@ -135,83 +141,11 @@ else:  # User is logged in, show the main app
                                     "Toss": toss_winner_display,
                                     "Match Winner": match_winner_display,
                                     "Date": selected_date_str,
-                                    "Time": submission_time_ist,
+                                    "Time": submission_time_ist,  # Store strictly HH:MM:SS
                                 }
                                 st.session_state.predictions = predictions
 
-                                # Update Excel file automatically
-                                try:
-                                    g = Github(GITHUB_TOKEN)
-                                    repo = g.get_repo(REPO_NAME)
-
-                                    # Create user-specific file path
-                                    user_file_path = f"predictions_{st.session_state.user_name.lower()}.xlsx"
-
-                                    # Check if file exists
-                                    try:
-                                        file = repo.get_contents(user_file_path)
-                                        excel_content = file.decoded_content
-                                        excel_file = io.BytesIO(excel_content)
-                                        existing_df = pd.read_excel(excel_file)
-                                    except Exception:
-                                        # If file does not exist, create an empty DataFrame
-                                        existing_df = pd.DataFrame()
-
-                                    # Prepare new predictions data
-                                    new_data = []
-                                    for match, prediction in predictions[
-                                        st.session_state.user_name
-                                    ].items():
-                                        new_data.append(
-                                            {
-                                                "Date": prediction["Date"],
-                                                "Match": match,
-                                                "Toss": prediction["Toss"],
-                                                "Match Winner": prediction["Match Winner"],
-                                                "Time": prediction["Time"],
-                                            }
-                                        )
-                                    new_df = pd.DataFrame(new_data)
-
-                                    # Merge old and new data
-                                    if not existing_df.empty:
-                                        merged_df = pd.concat(
-                                            [existing_df, new_df], ignore_index=True
-                                        )
-                                        merged_df = merged_df.drop_duplicates(
-                                            subset=["Match", "Date"], keep="last"
-                                        )
-                                        updated_df = merged_df
-                                    else:
-                                        updated_df = new_df
-
-                                    # Write updated data to Excel
-                                    output = io.BytesIO()
-                                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                                        updated_df.to_excel(writer, index=False)
-
-                                    updated_excel_content = output.getvalue()
-
-                                    # Update or create the file on GitHub
-                                    try:
-                                        repo.update_file(
-                                            user_file_path,
-                                            "Update predictions",
-                                            updated_excel_content,
-                                            file.sha,
-                                        )
-                                    except Exception:
-                                        repo.create_file(
-                                            user_file_path,
-                                            "Create predictions file",
-                                            updated_excel_content,
-                                        )
-
-                                    st.success(
-                                        "Prediction submitted!"
-                                    )
-                                except Exception as e:
-                                    st.error(f"Error updating predictions: {e}")
+                                st.success("Prediction submitted!")
 
             # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
@@ -223,11 +157,11 @@ else:  # User is logged in, show the main app
                             all_predictions.append(
                                 {
                                     "User": user,
-                                    "Match": match,
-                                    "Toss Prediction": prediction["Toss"],
-                                    "Match Prediction": prediction["Match Winner"],
+                                    "Match": abbreviate_match(match),  # Show abbreviated match names
+                                    "Toss Prediction": abbreviate_name(prediction["Toss"]),
+                                    "Match Prediction": abbreviate_name(prediction["Match Winner"]),
                                     "Date": prediction["Date"],
-                                    "Time": prediction["Time"],
+                                    "Time": prediction["Time"],  # Display strictly HH:MM:SS
                                 }
                             )
 
