@@ -129,7 +129,7 @@ else:  # User is logged in, show the main app
                                 if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute > 0)):
                                     st.warning("Submission time for the first match exceeded 3:00 PM IST. Your prediction will not be recorded.")
                                     continue
-                                elif i == 1 and (submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute > 0)):
+                                elif i == 1 and (submission_time_hour > 13 or (submission_time_hour == 13 and submission_time_minute > 0)):
                                     st.warning("Submission time for the second match exceeded 7:00 PM IST. Your prediction will not be recorded.")
                                     continue
 
