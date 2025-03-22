@@ -91,7 +91,7 @@ else:  # User is logged in, show the main app
 
     # --- Freeze Date ---
     selected_date = datetime.today().date()  # Automatically sets the date to today
-    st.write(f"Selected Date: {selected_date}")
+    st.write(f"Date: {selected_date}")
 
     # --- DATE PARSING FUNCTION ---
     def parse_date(date_str):
