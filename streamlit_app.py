@@ -138,7 +138,7 @@ else:  # User is logged in, show the main app
                                 st.session_state.predictions = predictions
 
                                 st.success("Prediction submitted!")
-                                st.experimental_rerun()
+                                st_rerun()
 
             # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
