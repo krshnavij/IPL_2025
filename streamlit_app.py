@@ -45,7 +45,7 @@ password_reset_requests = {}
 # --- AUTO LOGOUT FUNCTION ---
 def check_auto_logout():
     # Define logout times
-    logout_times = [time(10, 35), time(10, 40)]  # 3:00 PM and 5:00 PM
+    logout_times = [time(10, 40), time(10, 45)]  # 3:00 PM and 5:00 PM
     
     # Get current time
     current_time = datetime.now().time()
@@ -151,8 +151,8 @@ else:  # User is logged in, show the main app
                     abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
 
                     # Define match-specific cut-off times
-                    cutoff_time_first_match = time(10, 35)  # 3:30 PM
-                    cutoff_time_second_match = time(10, 40)  # 7:00 PM
+                    cutoff_time_first_match = time(10, 40)  # 3:30 PM
+                    cutoff_time_second_match = time(10, 45)  # 7:00 PM
 
                     # Get current time
                     current_time = datetime.now().time()
