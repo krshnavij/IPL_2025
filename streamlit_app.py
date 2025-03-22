@@ -3,8 +3,8 @@ import pandas as pd
 import io
 import requests
 from github import Github
+from datetime import datetime, date, time
 import openpyxl
-from datetime import datetime, date
 
 # Placeholder for user credentials
 user_credentials = {
@@ -131,11 +131,30 @@ else:  # User is logged in, show the main app
                     teams = fixture.split(" vs ")
                     abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
 
+                    # Define match-specific cut-off times
+                    cutoff_time_first_match = time(15, 30)  # 3:30 PM
+                    cutoff_time_second_match = time(19, 0)  # 7:00 PM
+
+                    # Get current time
+                    current_time = datetime.now().time()
+
+                    # Determine whether the button should be disabled
+                    disable_button = False
+                    if i == 0 and current_time >= cutoff_time_first_match:  # First match
+                        disable_button = True
+                    elif i == 1 and current_time >= cutoff_time_second_match:  # Second match
+                        disable_button = True
+
+                    # Prediction form
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
                             toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
-                            submitted = st.form_submit_button("Submit Predictions")
+                            submitted = st.form_submit_button("Submit Predictions", disabled=disable_button)
+                            
+                            if disable_button:
+                                st.warning(f"Predictions for this match are closed.")
+                            
                             if submitted:
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
