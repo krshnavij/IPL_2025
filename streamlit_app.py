@@ -101,7 +101,7 @@ else:  # User is logged in, show the main app
         data["Date"] = data["Date"].dt.date
         selected_date_datetime = pd.to_datetime(selected_date).date()
         filtered_data = data[data["Date"] == selected_date_datetime]
-        
+
         # Abbreviate team names in the Fixture column
         filtered_data["Fixture"] = filtered_data["Fixture"].apply(
             lambda fixture: " vs ".join([abbreviate_name(team) for team in fixture.split(" vs ")])
@@ -226,10 +226,11 @@ else:  # User is logged in, show the main app
                 for user, user_predictions in predictions.items():
                     for match, prediction in user_predictions.items():
                         if prediction["Date"] == selected_date_str:  # Filter by selected date
+                            abbreviated_match = " vs ".join([abbreviate_name(team) for team in match.split(" vs ")])
                             all_predictions.append(
                                 {
                                     "User": user,
-                                    "Match": match,
+                                    "Match": abbreviated_match,
                                     "Toss Prediction": prediction["Toss"],
                                     "Match Prediction": prediction["Match Winner"],
                                     "Date": prediction["Date"],
