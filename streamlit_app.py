@@ -137,12 +137,12 @@ else:  # User is logged in, show the main app
                                 submission_time_hour = ist_time.hour
                                 submission_time_minute = ist_time.minute
 
-                                # Determine if submission is late based on match timings
-                                if i == 0 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 0)):
-                                    st.warning("Submission time for the first match exceeded 3PM IST. Your prediction will not be recorded.")
+                                # Determine if submission is late based on match timings (12:10 PM for testing)
+                                if i == 0 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 10)):
+                                    st.warning("Submission time for the first match exceeded 12:10 PM IST. Your prediction will not be recorded.")
                                     continue  # Skip updating predictions for late submission
-                                elif i == 1 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 0)):
-                                    st.warning("Submission time for the second match exceeded 7PM IST. Your prediction will not be recorded.")
+                                elif i == 1 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 10)):
+                                    st.warning("Submission time for the second match exceeded 12:10 PM IST. Your prediction will not be recorded.")
                                     continue  # Skip updating predictions for late submission
 
                                 if st.session_state.user_name not in predictions:
