@@ -94,7 +94,6 @@ else:  # User is logged in, show the main app
     # --- DATE INPUT ---
     selected_date = st.date_input("Select a date to filter the data")
 
-
     # --- DATE PARSING FUNCTION ---
     def parse_date(date_str):
         try:
