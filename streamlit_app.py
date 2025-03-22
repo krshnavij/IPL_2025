@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
 import io
-import requests
 from github import Github
-from datetime import datetime, date, timezone, timedelta
+from datetime import datetime, date, timedelta
 
 # Placeholder for user credentials
 user_credentials = {
@@ -69,17 +68,6 @@ if st.session_state.user_name is None:  # Show login form
                 st.success("Password reset request sent (placeholder). Check your email (not implemented).")
             else:
                 st.error("Username not found.")
-elif "password_reset" in st.session_state and st.session_state.password_reset:
-    new_password = st.text_input("New Password:", type="password")
-    confirm_password = st.text_input("Confirm New Password:", type="password")
-    if st.button("Change Password"):
-        if new_password == confirm_password:
-            user_credentials[st.session_state.user_name] = new_password
-            st.success("Password changed successfully.")
-            del st.session_state.password_reset
-            st.rerun()
-        else:
-            st.error("Passwords do not match.")
 else:  # User is logged in, show the main app
     # --- CONFIGS ---
     DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
@@ -136,9 +124,11 @@ else:  # User is logged in, show the main app
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
                             submitted = st.form_submit_button("Submit Predictions")
                             if submitted:
-                                now_utc = datetime.now(timezone.utc)
-                                ist_timezone = timezone(timedelta(hours=5, minutes=30))
-                                submission_time_ist = now_utc.astimezone(ist_timezone).strftime("%H:%M:%S %Z%z")
+                                # Get current time in IST
+                                now = datetime.now()
+                                ist_time = now + timedelta(hours=5, minutes=30)
+                                submission_time_ist = ist_time.strftime("%H:%M:%S")  # Format time as HH:MM:SS
+
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
                                 predictions[st.session_state.user_name][fixture] = {
@@ -241,21 +231,7 @@ else:  # User is logged in, show the main app
                                 }
                             )
 
-                # Create a DataFrame with columns for User, Match, Toss Prediction, Match Prediction, and Date
                 predictions_df = pd.DataFrame(all_predictions)
-                predictions_df = predictions_df.set_index("Match")  # Set Match as index for better readability
-
-                # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
-                def abbreviate_match(match):
-                    teams = match.split(" vs ")
-                    abbreviated_teams = [abbreviate_name(team) for team in teams]
-                    return " vs ".join(abbreviated_teams)
-
-                predictions_df.index = predictions_df.index.to_series().apply(abbreviate_match)
-                predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(abbreviate_name)
-                predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(abbreviate_name)
-
-                # Display predictions
                 st.dataframe(predictions_df)
             else:
                 st.write("No data available for the selected date.")
@@ -263,7 +239,6 @@ else:  # User is logged in, show the main app
         st.error("CSV file not found. Please make sure the URL is correct and the file exists.")
     except Exception as e:
         st.error(f"An error occurred: {e}")
-        st.write("Please check the data source, date format, and any other potential issues.")
 
     if st.button("Logout"):
         st.session_state.user_name = None
