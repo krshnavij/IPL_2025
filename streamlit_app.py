@@ -4,7 +4,7 @@ import io
 import requests
 from github import Github
 import openpyxl
-from datetime import datetime, date, time
+from datetime import datetime, date
 
 # Placeholder for user credentials
 user_credentials = {
@@ -39,32 +39,25 @@ team_name_mapping = {
 def abbreviate_name(name):
     return team_name_mapping.get(name.strip(), name.strip())
 
+# --- AUTO LOGOUT LOGIC ---
+def check_auto_logout():
+    # Set the auto logout time (e.g., 10:50 AM)
+    auto_logout_time = datetime.now().replace(hour=10, minute=50, second=0, microsecond=0)
+    # Get the current time
+    current_time = datetime.now()
+    # If current time is greater than or equal to auto logout time, log out the user
+    if current_time >= auto_logout_time:
+        st.session_state.user_name = None
+        st.session_state.password_reset = None
+        st.warning("You have been automatically logged out.")
+        st.rerun()
+
 # Placeholder for password reset requests
 password_reset_requests = {}
-
-# --- AUTO LOGOUT FUNCTION ---
-def check_auto_logout():
-    # Define logout times
-    logout_times = [time(10, 46), time(10, 47)]  # 3:00 PM and 5:00 PM
-    
-    # Get current time
-    current_time = datetime.now().time()
-    
-    # Check if current time matches any logout time
-    for logout_time in logout_times:
-        if logout_time <= current_time < (logout_time.replace(minute=logout_time.minute + 1)):  # Between logout_time and logout_time + 1 minute
-            return True
-    return False
 
 # Placeholder for user login
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
-
-# Check auto logout condition
-if check_auto_logout():
-    st.session_state.user_name = None
-    st.warning("You have been logged out automatically due to the scheduled logout time.")
-    st.stop()  # Stop further execution
 
 if st.session_state.user_name is None:  # Show login form
     username_input = st.text_input("Username:")
@@ -111,6 +104,9 @@ else:  # User is logged in, show the main app
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
     st.title("🏏 IPL PREDICTION 2025")
 
+    # --- AUTO LOGOUT CHECK ---
+    check_auto_logout()
+
     # --- DATE INPUT ---
     # Freeze the date input to today's date
     selected_date = st.date_input(
@@ -151,28 +147,11 @@ else:  # User is logged in, show the main app
                     teams = fixture.split(" vs ")
                     abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
 
-                    # Define match-specific cut-off times
-                    cutoff_time_first_match = time(10, 46)  # 3:30 PM
-                    cutoff_time_second_match = time(10, 47)  # 7:00 PM
-
-                    # Get current time
-                    current_time = datetime.now().time()
-
-                    # Determine whether the button should be disabled
-                    disable_button = False
-                    if i == 0 and current_time >= cutoff_time_first_match:  # First match
-                        disable_button = True
-                    elif i == 1 and current_time >= cutoff_time_second_match:  # Second match
-                        disable_button = True
-
-                    # Prediction form
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
                             toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
-                            submitted = st.form_submit_button("Submit Predictions", disabled=disable_button)
-                            if disable_button:  # Show warning if the button is disabled
-                                st.warning(f"Predictions for this match are closed.")
+                            submitted = st.form_submit_button("Submit Predictions")
                             if submitted:
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
