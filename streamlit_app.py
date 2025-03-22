@@ -17,6 +17,7 @@ user_credentials = {
     "karunya": "balyam",
     "apoorva": "vasantha",
     "priya": "mythili",
+    # Add more users if needed
 }
 
 # Team name abbreviations
@@ -31,6 +32,7 @@ team_name_mapping = {
     "Rajasthan Royals": "RR",
     "Lucknow Super Giants": "LSG",
     "Gujarat Titans": "GT",
+    # Add other teams if needed
 }
 
 # Helper function to abbreviate team names
@@ -89,9 +91,9 @@ else:  # User is logged in, show the main app
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
     st.title("🏏 IPL PREDICTION 2025")
 
-    # --- Freeze Date ---
-    selected_date = datetime.today().date()  # Automatically sets the date to today
-    st.write(f"Date is frozen to: {selected_date}")
+    # --- DATE INPUT ---
+    selected_date = st.date_input("Select a date to filter the data")
+
 
     # --- DATE PARSING FUNCTION ---
     def parse_date(date_str):
@@ -106,9 +108,10 @@ else:  # User is logged in, show the main app
         data["Date"] = data["Date"].str.strip()
         data["Date"] = data["Date"].apply(parse_date)
         data["Date"] = data["Date"].dt.date
-        filtered_data = data[data["Date"] == selected_date]
+        selected_date_datetime = pd.to_datetime(selected_date).date()
+        filtered_data = data[data["Date"] == selected_date_datetime]
         if not filtered_data.empty:
-            selected_date_str = selected_date.strftime("%d-%m-%Y")
+            selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
             st.text(f"Selected Date: {selected_date_str}")
             st.dataframe(filtered_data)
             fixtures_on_date = filtered_data["Fixture"].tolist()
@@ -180,7 +183,7 @@ else:  # User is logged in, show the main app
                 else:
                     st.subheader(f"No predictions submitted for {selected_date_str}.")
         else:
-            st.write("No data available for today's date.")
+            st.write("No data available for the selected date.")
     except FileNotFoundError:
         st.error("CSV file not found. Please make sure the URL is correct and the file exists.")
     except Exception as e:
