@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import io
 import requests
 from github import Github
 import openpyxl
@@ -91,7 +90,7 @@ else:  # User is logged in, show the main app
 
     # --- Freeze Date ---
     selected_date = datetime.today().date()  # Automatically sets the date to today
-    st.write(f"Date: {selected_date}")
+    st.write(f"Date: {selected_date.strftime('%d-%m-%Y')}")
 
     # --- DATE PARSING FUNCTION ---
     def parse_date(date_str):
@@ -108,8 +107,6 @@ else:  # User is logged in, show the main app
         data["Date"] = data["Date"].dt.date
         filtered_data = data[data["Date"] == selected_date]
         if not filtered_data.empty:
-            selected_date_str = selected_date.strftime("%d-%m-%Y")
-            st.text(f"Selected Date: {selected_date_str}")
             st.dataframe(filtered_data)
             fixtures_on_date = filtered_data["Fixture"].tolist()
 
@@ -135,7 +132,7 @@ else:  # User is logged in, show the main app
                                 predictions[st.session_state.user_name][fixture] = {
                                     "Toss": toss_winner_display,
                                     "Match Winner": match_winner_display,
-                                    "Date": selected_date_str,
+                                    "Date": selected_date.strftime('%d-%m-%Y'),
                                 }
                                 st.session_state.predictions = predictions
 
@@ -146,7 +143,7 @@ else:  # User is logged in, show the main app
                 all_predictions = []
                 for user, user_predictions in predictions.items():
                     for match, prediction in user_predictions.items():
-                        if prediction["Date"] == selected_date_str:  # Filter by selected date
+                        if prediction["Date"] == selected_date.strftime('%d-%m-%Y'):  # Filter by selected date
                             all_predictions.append(
                                 {
                                     "User": user,
@@ -159,7 +156,7 @@ else:  # User is logged in, show the main app
 
                 # Only show the table if there are predictions
                 if all_predictions:
-                    st.subheader(f"Predictions for {selected_date_str}")
+                    st.subheader(f"Predictions for {selected_date.strftime('%d-%m-%Y')}")
                     predictions_df = pd.DataFrame(all_predictions)
 
                     # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
@@ -178,7 +175,7 @@ else:  # User is logged in, show the main app
                     # Display predictions table
                     st.dataframe(predictions_df)
                 else:
-                    st.subheader(f"No predictions submitted for {selected_date_str}.")
+                    st.subheader(f"No predictions submitted for {selected_date.strftime('%d-%m-%Y')}.")
         else:
             st.write("No data available for today's date.")
     except FileNotFoundError:
