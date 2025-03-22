@@ -37,9 +37,6 @@ team_name_mapping = {
 def abbreviate_name(name):
     return team_name_mapping.get(name.strip(), name.strip())
 
-# Placeholder for password reset requests
-password_reset_requests = {}
-
 # Placeholder for user login
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
@@ -59,31 +56,9 @@ if st.session_state.user_name is None:  # Show login form
                 st.error("Invalid username or password.")
         else:
             st.error("Please enter both username and password.")
-    # Forgot Password
-    if st.checkbox("Forgot Password?"):
-        forgot_username = st.text_input("Enter your username to reset password:")
-        if st.button("Request Reset"):
-            if forgot_username.lower() in [user.lower() for user in user_credentials]:
-                password_reset_requests[forgot_username.lower()] = True
-                st.success("Password reset request sent (placeholder). Check your email (not implemented).")
-            else:
-                st.error("Username not found.")
-elif "password_reset" in st.session_state and st.session_state.password_reset:
-    new_password = st.text_input("New Password:", type="password")
-    confirm_password = st.text_input("Confirm New Password:", type="password")
-    if st.button("Change Password"):
-        if new_password == confirm_password:
-            user_credentials[st.session_state.user_name] = new_password
-            st.success("Password changed successfully.")
-            del st.session_state.password_reset
-            st.rerun()
-        else:
-            st.error("Passwords do not match.")
 else:  # User is logged in, show the main app
     # --- CONFIGS ---
     DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
-    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Fetch token from Streamlit Secrets
-    REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
 
     # --- PAGE SETUP ---
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
@@ -92,8 +67,8 @@ else:  # User is logged in, show the main app
     # --- DATE INPUT ---
     selected_date = st.date_input(
         "Select a date to filter the data",
-        value=date.today(),  # Default to today
-        disabled=True  # Disable the user from selecting other dates
+        value=date.today(),
+        disabled=True
     )
 
     # --- DATE PARSING FUNCTION ---
@@ -128,13 +103,18 @@ else:  # User is logged in, show the main app
                     teams = fixture.split(" vs ")
                     abbreviated_teams = [abbreviate_name(team) for team in teams]
 
-                    # Extract the match time from the filtered data
+                    # Extract and validate the match time
                     match_time_str = filtered_data.loc[filtered_data["Fixture"] == fixture, "Time"].values[0]
                     match_time_str = match_time_str.strip()  # Remove extra spaces
+
+                    # Debugging: Print the raw match time
+                    st.write(f"Raw match time: '{match_time_str}'")
+
                     try:
-                        match_datetime = datetime.strptime(f"{selected_date_str} {match_time_str}", "%d-%m-%Y %I:%M %p")
+                        # Parse the match time using 24-hour format
+                        match_datetime = datetime.strptime(f"{selected_date_str} {match_time_str}", "%d-%m-%Y %H:%M:%S")
                     except ValueError as e:
-                        st.error(f"Error parsing match time: {e}")
+                        st.error(f"Error parsing match time: {match_time_str}. Details: {e}")
                         continue
 
                     current_time = datetime.now()
@@ -160,7 +140,6 @@ else:  # User is logged in, show the main app
                                     "Date": selected_date_str,
                                 }
                                 st.session_state.predictions = predictions
-
                                 st.success("Prediction submitted!")
 
             # --- DISPLAY PREDICTIONS TABLE ---
