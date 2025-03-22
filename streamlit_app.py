@@ -92,7 +92,7 @@ else:  # User is logged in, show the main app
     # --- DATE INPUT ---
     selected_date = st.date_input(
         "Select a date to filter the data",
-        value=date.today(),  # Default to today's date
+        value=date.today(),  # Default to today
         disabled=True  # Disable the user from selecting other dates
     )
 
@@ -161,63 +161,7 @@ else:  # User is logged in, show the main app
                                 }
                                 st.session_state.predictions = predictions
 
-                                # Update Excel file automatically
-                                try:
-                                    g = Github(GITHUB_TOKEN)
-                                    repo = g.get_repo(REPO_NAME)
-
-                                    user_file_path = f"predictions_{st.session_state.user_name.lower()}.xlsx"
-
-                                    try:
-                                        file = repo.get_contents(user_file_path)
-                                        excel_content = file.decoded_content
-                                        excel_file = io.BytesIO(excel_content)
-                                        existing_df = pd.read_excel(excel_file)
-                                    except Exception:
-                                        existing_df = pd.DataFrame()
-
-                                    new_data = []
-                                    for match, prediction in predictions[st.session_state.user_name].items():
-                                        new_data.append(
-                                            {
-                                                "Date": prediction["Date"],
-                                                "Match": match,
-                                                "Toss": prediction["Toss"],
-                                                "Match Winner": prediction["Match Winner"],
-                                            }
-                                        )
-                                    new_df = pd.DataFrame(new_data)
-
-                                    if not existing_df.empty:
-                                        merged_df = pd.concat([existing_df, new_df], ignore_index=True)
-                                        merged_df = merged_df.drop_duplicates(subset=["Match", "Date"], keep="last")
-                                        updated_df = merged_df
-                                    else:
-                                        updated_df = new_df
-
-                                    output = io.BytesIO()
-                                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                                        updated_df.to_excel(writer, index=False)
-
-                                    updated_excel_content = output.getvalue()
-
-                                    try:
-                                        repo.update_file(
-                                            user_file_path,
-                                            "Update predictions",
-                                            updated_excel_content,
-                                            file.sha,
-                                        )
-                                    except Exception:
-                                        repo.create_file(
-                                            user_file_path,
-                                            "Create predictions file",
-                                            updated_excel_content,
-                                        )
-
-                                    st.success("Prediction submitted!")
-                                except Exception as e:
-                                    st.error(f"Error updating predictions: {e}")
+                                st.success("Prediction submitted!")
 
             # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
@@ -259,5 +203,4 @@ else:  # User is logged in, show the main app
 
     if st.button("Logout"):
         st.session_state.user_name = None
-        st.session_state.password_reset = None
         st.rerun()
