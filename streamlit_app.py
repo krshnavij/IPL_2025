@@ -125,7 +125,7 @@ else:  # User is logged in, show the main app
                                 submission_time_hour = ist_time.hour
                                 submission_time_minute = ist_time.minute
 
-                                # Late submission check (12:30 PM cutoff)
+                                # Late submission check (accept submissions until 12:30 PM)
                                 if i == 0 and (submission_time_hour > 12 or (submission_time_hour == 12 and submission_time_minute > 30)):
                                     st.warning("Submission time for the first match exceeded 12:30 PM IST. Your prediction will not be recorded.")
                                     continue
