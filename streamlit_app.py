@@ -132,7 +132,7 @@ else:  # User is logged in, show the main app
                     abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
 
                     # Define match-specific cut-off times
-                    cutoff_time_first_match = time(15, 30)  # 3:30 PM
+                    cutoff_time_first_match = time(10, 05)  # 3:30 PM
                     cutoff_time_second_match = time(10, 0)  # 7:00 PM
 
                     # Get current time
