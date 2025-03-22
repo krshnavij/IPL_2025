@@ -133,7 +133,7 @@ else:  # User is logged in, show the main app
 
                     # Extract the match time from the filtered data
                     match_time_str = filtered_data.loc[filtered_data["Fixture"] == fixture, "Time"].values[0]
-                    match_datetime = datetime.strptime(f"{selected_date_str} {match_time_str}", "%d-%m-%Y %H:%M")
+                    match_datetime = datetime.strptime(f"{selected_date_str} {match_time_str}", "%d-%m-%Y %I:%M %p")
                     current_time = datetime.now()
 
                     # Check if the match time has passed to disable the submit button
