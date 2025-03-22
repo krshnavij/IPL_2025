@@ -1,8 +1,5 @@
 import streamlit as st
 import pandas as pd
-import requests
-from github import Github
-import openpyxl
 from datetime import datetime
 
 # Placeholder for user credentials
@@ -64,7 +61,9 @@ if st.session_state.user_name is None:  # Show login form
         if st.button("Request Reset"):
             if forgot_username.lower() in [user.lower() for user in user_credentials]:
                 password_reset_requests[forgot_username.lower()] = True
-                st.success("Password reset request sent (placeholder). Check your email (not implemented).")
+                st.success(
+                    "Password reset request sent (placeholder). Check your email (not implemented)."
+                )
             else:
                 st.error("Username not found.")
 elif "password_reset" in st.session_state and st.session_state.password_reset:
@@ -81,8 +80,6 @@ elif "password_reset" in st.session_state and st.session_state.password_reset:
 else:  # User is logged in, show the main app
     # --- CONFIGS ---
     DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
-    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Fetch token from Streamlit Secrets
-    REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
 
     # --- PAGE SETUP ---
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
@@ -119,12 +116,16 @@ else:  # User is logged in, show the main app
                 with st.container():
                     st.subheader(f"Fixture: {fixture}")
                     teams = fixture.split(" vs ")
-                    abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
+                    abbreviated_teams = [abbreviate_name(team) for team in teams]
 
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
-                            toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
-                            match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
+                            toss_winner_display = st.selectbox(
+                                "Toss Winner:", abbreviated_teams, key=f"toss_{i}"
+                            )
+                            match_winner_display = st.selectbox(
+                                "Match Winner:", abbreviated_teams, key=f"match_{i}"
+                            )
                             submitted = st.form_submit_button("Submit Predictions")
                             if submitted:
                                 if st.session_state.user_name not in predictions:
@@ -132,18 +133,22 @@ else:  # User is logged in, show the main app
                                 predictions[st.session_state.user_name][fixture] = {
                                     "Toss": toss_winner_display,
                                     "Match Winner": match_winner_display,
-                                    "Date": selected_date.strftime('%d-%m-%Y'),
+                                    "Date": selected_date.strftime("%d-%m-%Y"),
                                 }
                                 st.session_state.predictions = predictions
 
                                 st.success("Prediction submitted!")
+                                st.experimental_rerun()
 
             # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
                 all_predictions = []
                 for user, user_predictions in predictions.items():
                     for match, prediction in user_predictions.items():
-                        if prediction["Date"] == selected_date.strftime('%d-%m-%Y'):  # Filter by selected date
+                        if (
+                            prediction["Date"]
+                            == selected_date.strftime("%d-%m-%Y")
+                        ):  # Filter by selected date
                             all_predictions.append(
                                 {
                                     "User": user,
@@ -156,26 +161,36 @@ else:  # User is logged in, show the main app
 
                 # Only show the table if there are predictions
                 if all_predictions:
-                    st.subheader(f"Predictions for {selected_date.strftime('%d-%m-%Y')}")
+                    st.subheader(
+                        f"Predictions for {selected_date.strftime('%d-%m-%Y')}"
+                    )
                     predictions_df = pd.DataFrame(all_predictions)
 
-                    # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
+                    # Replace full team names with abbreviations
                     def abbreviate_match(match):
                         teams = match.split(" vs ")
                         abbreviated_teams = [abbreviate_name(team) for team in teams]
                         return " vs ".join(abbreviated_teams)
 
-                    predictions_df["Match"] = predictions_df["Match"].apply(abbreviate_match)
-                    predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(abbreviate_name)
-                    predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(abbreviate_name)
+                    predictions_df["Match"] = predictions_df["Match"].apply(
+                        abbreviate_match
+                    )
+                    predictions_df["Toss Prediction"] = predictions_df[
+                        "Toss Prediction"
+                    ].apply(abbreviate_name)
+                    predictions_df["Match Prediction"] = predictions_df[
+                        "Match Prediction"
+                    ].apply(abbreviate_name)
 
-                    # Set Match as the index for better readability
+                    # Set Match as the index
                     predictions_df = predictions_df.set_index("Match")
 
                     # Display predictions table
                     st.dataframe(predictions_df)
                 else:
-                    st.subheader(f"No predictions submitted for {selected_date.strftime('%d-%m-%Y')}.")
+                    st.subheader(
+                        f"No predictions submitted for {selected_date.strftime('%d-%m-%Y')}."
+                    )
         else:
             st.write("No data available for today's date.")
     except FileNotFoundError:
