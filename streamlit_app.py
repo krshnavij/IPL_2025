@@ -120,10 +120,16 @@ else:  # User is logged in, show the main app
 
                     # Determine if the submit button should be disabled based on the match timing
                     disable_submit = False
-                    if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute >= 0)):
-                        disable_submit = True  # Disable for the 3:30 PM match after 3:00 PM
-                    elif i == 1 and (submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute >= 0)):
-                        disable_submit = True  # Disable for the 7:30 PM match after 7:00 PM
+                    if len(fixtures_on_date) == 1:  # Only one match for the day
+                        # Disable for the 7:30 PM match after 7:00 PM
+                        if submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute >= 0):
+                            disable_submit = True
+                    else:
+                        # Multiple matches for the day
+                        if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute >= 0)):
+                            disable_submit = True  # Disable for the 3:30 PM match after 3:00 PM
+                        elif i == 1 and (submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute >= 0)):
+                            disable_submit = True  # Disable for the 7:30 PM match after 7:00 PM
 
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
