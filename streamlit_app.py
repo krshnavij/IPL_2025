@@ -113,25 +113,31 @@ else:  # User is logged in, show the main app
                     teams = fixture.split(" vs ")
                     abbreviated_teams = [abbreviate_name(team) for team in teams]
 
+                    now = datetime.now()
+                    ist_time = now + timedelta(hours=5, minutes=30)  # Convert to IST
+                    submission_time_hour = ist_time.hour
+                    submission_time_minute = ist_time.minute
+
+                    # Determine if the submit button should be disabled based on the match timing
+                    disable_submit = False
+                    if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute >= 0)):
+                        disable_submit = True  # Disable for the 3:30 PM match after 3:00 PM
+                    elif i == 1 and (submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute >= 0)):
+                        disable_submit = True  # Disable for the 7:30 PM match after 7:00 PM
+
                     with st.form(f"fixture_selections_{i}", clear_on_submit=False):
                         if len(teams) == 2:
                             toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
-                            submitted = st.form_submit_button("Submit Predictions")
-                            if submitted:
-                                now = datetime.now()
-                                ist_time = now + timedelta(hours=5, minutes=30)
+                            
+                            # Conditionally enable or disable the submit button
+                            submitted = st.form_submit_button("Submit Predictions", disabled=disable_submit)
+                            
+                            if disable_submit:
+                                st.warning("Submission time for this match has exceeded the cutoff. Your prediction will not be recorded.")
+                            elif submitted:
                                 submission_time_ist = ist_time.strftime("%H:%M:%S")
-                                submission_time_hour = ist_time.hour
-                                submission_time_minute = ist_time.minute
-
-                                # Late submission cutoff times
-                                if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute > 0)):
-                                    st.warning("Submission time for the first match exceeded 3:00 PM IST. Your prediction will not be recorded.")
-                                    continue
-                                elif i == 1 and (submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute > 0)):
-                                    st.warning("Submission time for the second match exceeded 7:00 PM IST. Your prediction will not be recorded.")
-                                    continue
+                                selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
 
                                 # Update predictions only if submission is valid
                                 if st.session_state.user_name not in predictions:
@@ -144,6 +150,7 @@ else:  # User is logged in, show the main app
                                 }
                                 st.session_state.predictions = predictions
 
+                                # Save predictions to GitHub
                                 try:
                                     g = Github(GITHUB_TOKEN)
                                     repo = g.get_repo(REPO_NAME)
@@ -225,7 +232,7 @@ else:  # User is logged in, show the main app
                             )
 
                 predictions_df = pd.DataFrame(all_predictions)
-                st.dataframe(predictions_df)
+                st.dataframe(predictions_df)  # Display interactive table
             else:
                 st.write("No data available for the selected date.")
     except FileNotFoundError:
