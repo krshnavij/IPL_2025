@@ -3,7 +3,6 @@ import pandas as pd
 import io
 import requests
 from github import Github
-import openpyxl
 from datetime import datetime, date, timezone, timedelta
 
 # Placeholder for user credentials
