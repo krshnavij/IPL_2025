@@ -4,7 +4,7 @@ import io
 import requests
 from github import Github
 import openpyxl
-from datetime import datetime
+from datetime import datetime, date
 
 # Placeholder for user credentials
 user_credentials = {
@@ -92,7 +92,12 @@ else:  # User is logged in, show the main app
     st.title("🏏 IPL PREDICTION 2025")
 
     # --- DATE INPUT ---
-    selected_date = st.date_input("Select a date to filter the data")
+    # Freeze the date input to today's date
+    selected_date = st.date_input(
+        "Select a date to filter the data",
+        value=date.today(),  # Default to today's date
+        disabled=True  # Disable the user from selecting other dates
+    )
 
     # --- DATE PARSING FUNCTION ---
     def parse_date(date_str):
