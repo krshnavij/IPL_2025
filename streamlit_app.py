@@ -6,6 +6,11 @@ from github import Github
 import openpyxl
 from datetime import datetime, date, time
 
+# --- CONFIGS ---
+DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Fetch token from Streamlit Secrets
+REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
+
 # Placeholder for user credentials
 user_credentials = {
     "vijay": "nila",
@@ -42,11 +47,267 @@ def abbreviate_name(name):
 # Placeholder for password reset requests
 password_reset_requests = {}
 
-# Placeholder for user login
-if "user_name" not in st.session_state:
-    st.session_state.user_name = None
+# --- PAGE SETUP ---
+st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
+st.title("🏏 IPL PREDICTION 2025")
 
-if st.session_state.user_name is None:  # Show login form
+# --- DATE INPUT ---
+# Freeze the date input to today's date
+selected_date = st.date_input(
+    "Select a date to filter the data",
+    value=date.today(),  # Default to today's date
+    disabled=True  # Disable the user from selecting other dates
+)
+
+# --- DATE PARSING FUNCTION ---
+def parse_date(date_str):
+    try:
+        return pd.to_datetime(date_str, format="%d-%m-%Y")
+    except ValueError:
+        return pd.NaT
+
+# --- LOAD AND FILTER DATA ---
+try:
+    data = pd.read_csv(DATA_URL)
+    data["Date"] = data["Date"].str.strip()
+    data["Date"] = data["Date"].apply(parse_date)
+    data["Date"] = data["Date"].dt.date
+    selected_date_datetime = pd.to_datetime(selected_date).date()
+    filtered_data = data[data["Date"] == selected_date_datetime]
+    if not filtered_data.empty:
+        selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
+        st.text(f"Selected Date: {selected_date_str}")
+        st.dataframe(filtered_data)
+        fixtures_on_date = filtered_data["Fixture"].tolist()
+
+        # --- PREDICTION LOGIC ---
+        if "predictions" not in st.session_state:
+            st.session_state.predictions = {}
+        predictions = st.session_state.predictions
+
+        for i, fixture in enumerate(fixtures_on_date):
+            with st.container():
+                st.subheader(f"Fixture: {fixture}")
+                teams = fixture.split(" vs ")
+                abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
+
+                with st.form(f"fixture_selections_{i}", clear_on_submit=False):
+                    if len(teams) == 2:
+                        toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
+                        match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
+                        submitted = st.form_submit_button("Submit Predictions")
+                        if submitted:
+                            current_time = datetime.now().time()
+                            match_number = i + 1
+                            cutoff_time = time(15, 0) if match_number == 1 else time(19, 0) # 3 PM for 1st, 7 PM for 2nd
+
+                            if current_time < cutoff_time:
+                                if st.session_state.user_name not in predictions:
+                                    predictions[st.session_state.user_name] = {}
+                                predictions[st.session_state.user_name][fixture] = {
+                                    "Toss": toss_winner_display,
+                                    "Match Winner": match_winner_display,
+                                    "Date": selected_date_str,
+                                }
+                                st.session_state.predictions = predictions
+
+                                # Update Excel file automatically
+                                try:
+                                    g = Github(GITHUB_TOKEN)
+                                    repo = g.get_repo(REPO_NAME)
+
+                                    # Create user-specific file path
+                                    user_file_path = f"predictions_{st.session_state.user_name.lower()}.xlsx"
+
+                                    # Check if file exists
+                                    try:
+                                        file = repo.get_contents(user_file_path)
+                                        excel_content = file.decoded_content
+                                        excel_file = io.BytesIO(excel_content)
+                                        existing_df = pd.read_excel(excel_file)
+                                    except Exception:
+                                        # If file does not exist, create an empty DataFrame
+                                        existing_df = pd.DataFrame()
+
+                                    # Prepare new predictions data
+                                    new_data = []
+                                    for match, prediction in predictions[
+                                        st.session_state.user_name
+                                    ].items():
+                                        new_data.append(
+                                            {
+                                                "Date": prediction["Date"],
+                                                "Match": match,
+                                                "Toss": prediction["Toss"],
+                                                "Match Winner": prediction["Match Winner"],
+                                            }
+                                        )
+                                    new_df = pd.DataFrame(new_data)
+
+                                    # Merge old and new data
+                                    if not existing_df.empty:
+                                        merged_df = pd.concat(
+                                            [existing_df, new_df], ignore_index=True
+                                        )
+                                        merged_df = merged_df.drop_duplicates(
+                                            subset=["Match", "Date"], keep="last"
+                                        )
+                                        updated_df = merged_df
+                                    else:
+                                        updated_df = new_df
+
+                                    # Write updated data to Excel
+                                    output = io.BytesIO()
+                                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                                        updated_df.to_excel(writer, index=False)
+
+                                    updated_excel_content = output.getvalue()
+
+                                    # Update or create the file on GitHub
+                                    try:
+                                        repo.update_file(
+                                            user_file_path,
+                                            "Update predictions",
+                                            updated_excel_content,
+                                            file.sha,
+                                        )
+                                    except Exception:
+                                        repo.create_file(
+                                            user_file_path,
+                                            "Create predictions file",
+                                            updated_excel_content,
+                                        )
+
+                                    st.success(
+                                        "Prediction submitted!"
+                                    )
+                                except Exception as e:
+                                    st.error(f"Error updating predictions: {e}")
+                            else:
+                                st.warning(f"Predictions for this match cannot be submitted after {cutoff_time.strftime('%I:%M %p')}.")
+                                # Update Excel with N/A
+                                try:
+                                    g = Github(GITHUB_TOKEN)
+                                    repo = g.get_repo(REPO_NAME)
+
+                                    # Create user-specific file path
+                                    user_file_path = f"predictions_{st.session_state.user_name.lower()}.xlsx"
+
+                                    # Check if file exists
+                                    try:
+                                        file = repo.get_contents(user_file_path)
+                                        excel_content = file.decoded_content
+                                        excel_file = io.BytesIO(excel_content)
+                                        existing_df = pd.read_excel(excel_file)
+                                    except Exception:
+                                        # If file does not exist, create an empty DataFrame
+                                        existing_df = pd.DataFrame()
+
+                                    # Prepare new predictions data with N/A
+                                    new_data = [
+                                        {
+                                            "Date": selected_date_str,
+                                            "Match": fixture,
+                                            "Toss": "N/A",
+                                            "Match Winner": "N/A",
+                                        }
+                                    ]
+                                    new_df = pd.DataFrame(new_data)
+
+                                    # Merge old and new data
+                                    if not existing_df.empty:
+                                        merged_df = pd.concat(
+                                            [existing_df, new_df], ignore_index=True
+                                        )
+                                        merged_df = merged_df.drop_duplicates(
+                                            subset=["Match", "Date"], keep="last"
+                                        )
+                                        updated_df = merged_df
+                                    else:
+                                        updated_df = new_df
+
+                                    # Write updated data to Excel
+                                    output = io.BytesIO()
+                                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                                        updated_df.to_excel(writer, index=False)
+
+                                    updated_excel_content = output.getvalue()
+
+                                    # Update or create the file on GitHub
+                                    try:
+                                        repo.update_file(
+                                            user_file_path,
+                                            "Update predictions due to cutoff",
+                                            updated_excel_content,
+                                            file.sha,
+                                        )
+                                    except Exception:
+                                        repo.create_file(
+                                            user_file_path,
+                                            "Create predictions file",
+                                            updated_excel_content,
+                                        )
+
+                                    # Update session state to reflect N/A
+                                    if st.session_state.user_name not in predictions:
+                                        predictions[st.session_state.user_name] = {}
+                                    predictions[st.session_state.user_name][fixture] = {
+                                        "Toss": "N/A",
+                                        "Match Winner": "N/A",
+                                        "Date": selected_date_str,
+                                    }
+                                    st.session_state.predictions = predictions
+
+                                except Exception as e:
+                                    st.error(f"Error updating predictions in Excel: {e}")
+
+            # --- DISPLAY PREDICTIONS TABLE ---
+            if predictions:
+                st.subheader(f"Predictions for {selected_date_str}")
+                all_predictions = []
+                for user, user_predictions in predictions.items():
+                    for match, prediction in user_predictions.items():
+                        if prediction["Date"] == selected_date_str:  # Filter by selected date
+                            all_predictions.append(
+                                {
+                                    "User": user,
+                                    "Match": match,
+                                    "Toss Prediction": prediction["Toss"],
+                                    "Match Prediction": prediction["Match Winner"],
+                                    "Date": prediction["Date"],
+                                }
+                            )
+
+                # Create a DataFrame with columns for User, Match, Toss Prediction, Match Prediction, and Date
+                predictions_df = pd.DataFrame(all_predictions)
+                predictions_df = predictions_df.set_index("Match")  # Set Match as index for better readability
+
+                # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
+                def abbreviate_match(match):
+                    teams = match.split(" vs ")
+                    abbreviated_teams = [abbreviate_name(team) for team in teams]
+                    return " vs ".join(abbreviated_teams)
+
+                predictions_df.index = predictions_df.index.to_series().apply(abbreviate_match)
+                predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(abbreviate_name)
+                predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(abbreviate_name)
+
+                # Display predictions
+                st.dataframe(predictions_df)
+            else:
+                st.write("No data available for the selected date.")
+    except FileNotFoundError:
+        st.error("CSV file not found. Please make sure the URL is correct and the file exists.")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        st.write("Please check the data source, date format, and any other potential issues.")
+
+    if st.button("Logout"):
+        st.session_state.user_name = None
+        st.session_state.password_reset = None
+        st.rerun()
+
+else:  # Show login form
     username_input = st.text_input("Username:")
     password_input = st.text_input("Password:", type="password")
     if st.button("Login"):
@@ -81,140 +342,3 @@ elif "password_reset" in st.session_state and st.session_state.password_reset:
             st.rerun()
         else:
             st.error("Passwords do not match.")
-            else:  # User is logged in, show the main app
-    # --- CONFIGS ---
-    DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
-    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Fetch token from Streamlit Secrets
-    REPO_NAME = "krshnavij/IPL_2025"  # Replace with your repo name
-
-    # --- PAGE SETUP ---
-    st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
-    st.title("🏏 IPL PREDICTION 2025")
-
-    # --- DATE INPUT ---
-    selected_date = st.date_input(
-        "Select a date to filter the data",
-        value=date.today(),  # Default to today's date
-        disabled=True  # Disable the user from selecting other dates
-    )
-
-    # --- DATE PARSING FUNCTION ---
-    def parse_date(date_str):
-        try:
-            return pd.to_datetime(date_str, format="%d-%m-%Y")
-        except ValueError:
-            return pd.NaT
-
-    # --- LOAD AND FILTER DATA ---
-    try:
-        data = pd.read_csv(DATA_URL)
-        data["Date"] = data["Date"].str.strip()
-        data["Date"] = data["Date"].apply(parse_date)
-        data["Date"] = data["Date"].dt.date
-        selected_date_datetime = pd.to_datetime(selected_date).date()
-        filtered_data = data[data["Date"] == selected_date_datetime]
-        if not filtered_data.empty:
-            selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
-            st.text(f"Selected Date: {selected_date_str}")
-            st.dataframe(filtered_data)
-            fixtures_on_date = filtered_data["Fixture"].tolist()
-
-            # --- DEFINE CUTOFF TIMES ---
-            FIRST_MATCH_CUTOFF = time(15, 0)  # 3:00 PM
-            SECOND_MATCH_CUTOFF = time(19, 0)  # 7:00 PM
-# --- PREDICTION LOGIC ---
-            if "predictions" not in st.session_state:
-                st.session_state.predictions = {}
-            predictions = st.session_state.predictions
-
-            for i, fixture in enumerate(fixtures_on_date):
-                with st.container():
-                    st.subheader(f"Fixture: {fixture}")
-                    teams = fixture.split(" vs ")
-                    abbreviated_teams = [abbreviate_name(team) for team in teams]
-
-                    with st.form(f"fixture_selections_{i}", clear_on_submit=False):
-                        if len(teams) == 2:
-                            toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
-                            match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
-                            submitted = st.form_submit_button("Submit Predictions")
-                            if submitted:
-                                current_time = datetime.now().time()  # Get current time
-
-                                # Determine cutoff time based on match order
-                                cutoff_time = FIRST_MATCH_CUTOFF if i == 0 else SECOND_MATCH_CUTOFF
-
-                                if current_time <= cutoff_time:  # Check if the submission is within the cutoff time
-                                    if st.session_state.user_name not in predictions:
-                                        predictions[st.session_state.user_name] = {}
-                                    predictions[st.session_state.user_name][fixture] = {
-                                        "Toss": toss_winner_display,
-                                        "Match Winner": match_winner_display,
-                                        "Date": selected_date_str,
-                                    }
-                                    st.session_state.predictions = predictions
-                                    st.success("Prediction submitted!")
-                                else:  # Predictions after cutoff time
-                                    st.warning(f"Prediction cutoff time exceeded for {fixture}! Updating predictions as N/A.")
-
-                                    # Update predictions with "N/A"
-                                    if st.session_state.user_name not in predictions:
-                                        predictions[st.session_state.user_name] = {}
-                                    predictions[st.session_state.user_name][fixture] = {
-                                        "Toss": "N/A",
-                                        "Match Winner": "N/A",
-                                        "Date": selected_date_str,
-                                    }
-                                    st.session_state.predictions = predictions
-
-                                # Update Excel file automatically
-                                try:
-                                    g = Github(GITHUB_TOKEN)
-                                    repo = g.get_repo(REPO_NAME)
-                                    user_file_path = f"predictions_{st.session_state.user_name.lower()}.xlsx"
-
-                                    # Check if file exists
-                                    try:
-                                        file = repo.get_contents(user_file_path)
-                                        excel_content = file.decoded_content
-                                        excel_file = io.BytesIO(excel_content)
-                                        existing_df = pd.read_excel(excel_file)
-                                    except Exception:
-                                        existing_df = pd.DataFrame()
-
-                                    new_data = []
-                                    for match, prediction in predictions[st.session_state.user_name].items():
-                                        new_data.append({
-                                            "Date": prediction["Date"],
-                                            "Match": match,
-                                            "Toss": prediction["Toss"],
-                                            "Match Winner": prediction["Match Winner"],
-                                        })
-                                    new_df = pd.DataFrame(new_data)
-
-                                    if not existing_df.empty:
-                                        merged_df = pd.concat([existing_df, new_df], ignore_index=True)
-                                        merged_df = merged_df.drop_duplicates(subset=["Match", "Date"], keep="last")
-                                        updated_df = merged_df
-                                    else:
-                                        updated_df = new_df
-
-                                    output = io.BytesIO()
-                                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                                        updated_df.to_excel(writer, index=False)
-
-                                    updated_excel_content = output.getvalue()
-
-                                    try:
-                                        repo.update_file(user_file_path, "Update predictions", updated_excel_content, file.sha)
-                                    except:
-                                        repo.create_file(user_file_path, "Create predictions file", updated_excel_content)
-
-                                    st.success("Predictions updated!")
-                                except Exception as e:
-                                    st.error(f"Error updating predictions: {e}")
-
-            if st.button("Logout"):
-                st.session_state.user_name = None
-                st.session_state.password_reset = None
-                st.rerun()
