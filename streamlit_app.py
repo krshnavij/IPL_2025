@@ -3,8 +3,8 @@ import pandas as pd
 import io
 import requests
 from github import Github
-from datetime import datetime, date, time
 import openpyxl
+from datetime import datetime, date, time
 
 # Placeholder for user credentials
 user_credentials = {
@@ -45,14 +45,14 @@ password_reset_requests = {}
 # --- AUTO LOGOUT FUNCTION ---
 def check_auto_logout():
     # Define logout times
-    logout_times = [time(10, 40), time(10, 45)]  # 3:00 PM and 5:00 PM
+    logout_times = [time(10, 46), time(10, 47)]  # 3:00 PM and 5:00 PM
     
     # Get current time
     current_time = datetime.now().time()
     
     # Check if current time matches any logout time
     for logout_time in logout_times:
-        if current_time >= logout_time and current_time < (logout_time.replace(minute=1)):  # Between logout_time and logout_time + 1 minute
+        if logout_time <= current_time < (logout_time.replace(minute=logout_time.minute + 1)):  # Between logout_time and logout_time + 1 minute
             return True
     return False
 
@@ -112,6 +112,7 @@ else:  # User is logged in, show the main app
     st.title("🏏 IPL PREDICTION 2025")
 
     # --- DATE INPUT ---
+    # Freeze the date input to today's date
     selected_date = st.date_input(
         "Select a date to filter the data",
         value=date.today(),  # Default to today's date
@@ -151,8 +152,8 @@ else:  # User is logged in, show the main app
                     abbreviated_teams = [abbreviate_name(team) for team in teams]  # Use abbreviations for dropdown
 
                     # Define match-specific cut-off times
-                    cutoff_time_first_match = time(10, 40)  # 3:30 PM
-                    cutoff_time_second_match = time(10, 45)  # 7:00 PM
+                    cutoff_time_first_match = time(10, 46)  # 3:30 PM
+                    cutoff_time_second_match = time(10, 47)  # 7:00 PM
 
                     # Get current time
                     current_time = datetime.now().time()
@@ -170,10 +171,8 @@ else:  # User is logged in, show the main app
                             toss_winner_display = st.selectbox("Toss Winner:", abbreviated_teams, key=f"toss_{i}")
                             match_winner_display = st.selectbox("Match Winner:", abbreviated_teams, key=f"match_{i}")
                             submitted = st.form_submit_button("Submit Predictions", disabled=disable_button)
-                            
-                            if disable_button:
+                            if disable_button:  # Show warning if the button is disabled
                                 st.warning(f"Predictions for this match are closed.")
-                            
                             if submitted:
                                 if st.session_state.user_name not in predictions:
                                     predictions[st.session_state.user_name] = {}
@@ -183,7 +182,79 @@ else:  # User is logged in, show the main app
                                     "Date": selected_date_str,
                                 }
                                 st.session_state.predictions = predictions
-                                st.success("Prediction submitted!")
+
+                                # Update Excel file automatically
+                                try:
+                                    g = Github(GITHUB_TOKEN)
+                                    repo = g.get_repo(REPO_NAME)
+
+                                    # Create user-specific file path
+                                    user_file_path = f"predictions_{st.session_state.user_name.lower()}.xlsx"
+
+                                    # Check if file exists
+                                    try:
+                                        file = repo.get_contents(user_file_path)
+                                        excel_content = file.decoded_content
+                                        excel_file = io.BytesIO(excel_content)
+                                        existing_df = pd.read_excel(excel_file)
+                                    except Exception:
+                                        # If file does not exist, create an empty DataFrame
+                                        existing_df = pd.DataFrame()
+
+                                    # Prepare new predictions data
+                                    new_data = []
+                                    for match, prediction in predictions[
+                                        st.session_state.user_name
+                                    ].items():
+                                        new_data.append(
+                                            {
+                                                "Date": prediction["Date"],
+                                                "Match": match,
+                                                "Toss": prediction["Toss"],
+                                                "Match Winner": prediction["Match Winner"],
+                                            }
+                                        )
+                                    new_df = pd.DataFrame(new_data)
+
+                                    # Merge old and new data
+                                    if not existing_df.empty:
+                                        merged_df = pd.concat(
+                                            [existing_df, new_df], ignore_index=True
+                                        )
+                                        merged_df = merged_df.drop_duplicates(
+                                            subset=["Match", "Date"], keep="last"
+                                        )
+                                        updated_df = merged_df
+                                    else:
+                                        updated_df = new_df
+
+                                    # Write updated data to Excel
+                                    output = io.BytesIO()
+                                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                                        updated_df.to_excel(writer, index=False)
+
+                                    updated_excel_content = output.getvalue()
+
+                                    # Update or create the file on GitHub
+                                    try:
+                                        repo.update_file(
+                                            user_file_path,
+                                            "Update predictions",
+                                            updated_excel_content,
+                                            file.sha,
+                                        )
+                                    except Exception:
+                                        repo.create_file(
+                                            user_file_path,
+                                            "Create predictions file",
+                                            updated_excel_content,
+                                        )
+
+                                    st.success(
+                                        "Prediction submitted!"
+                                    )
+                                except Exception as e:
+                                    st.error(f"Error updating predictions: {e}")
 
             # --- DISPLAY PREDICTIONS TABLE ---
             if predictions:
@@ -202,7 +273,21 @@ else:  # User is logged in, show the main app
                                 }
                             )
 
+                # Create a DataFrame with columns for User, Match, Toss Prediction, Match Prediction, and Date
                 predictions_df = pd.DataFrame(all_predictions)
+                predictions_df = predictions_df.set_index("Match")  # Set Match as index for better readability
+
+                # Replace full team names with abbreviations in the Match, Toss Prediction, and Match Prediction columns
+                def abbreviate_match(match):
+                    teams = match.split(" vs ")
+                    abbreviated_teams = [abbreviate_name(team) for team in teams]
+                    return " vs ".join(abbreviated_teams)
+
+                predictions_df.index = predictions_df.index.to_series().apply(abbreviate_match)
+                predictions_df["Toss Prediction"] = predictions_df["Toss Prediction"].apply(abbreviate_name)
+                predictions_df["Match Prediction"] = predictions_df["Match Prediction"].apply(abbreviate_name)
+
+                # Display predictions
                 st.dataframe(predictions_df)
             else:
                 st.write("No data available for the selected date.")
