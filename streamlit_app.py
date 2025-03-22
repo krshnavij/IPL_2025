@@ -101,6 +101,12 @@ else:  # User is logged in, show the main app
         data["Date"] = data["Date"].dt.date
         selected_date_datetime = pd.to_datetime(selected_date).date()
         filtered_data = data[data["Date"] == selected_date_datetime]
+        
+        # Abbreviate team names in the Fixture column
+        filtered_data["Fixture"] = filtered_data["Fixture"].apply(
+            lambda fixture: " vs ".join([abbreviate_name(team) for team in fixture.split(" vs ")])
+        )
+
         if not filtered_data.empty:
             selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
             st.text(f"Selected Date: {selected_date_str}")
@@ -162,13 +168,10 @@ else:  # User is logged in, show the main app
                                     for match, prediction in predictions[
                                         st.session_state.user_name
                                     ].items():
-                                        teams = match.split(" vs ")
-                                        abbreviated_match = f"{abbreviate_name(teams[0])} vs {abbreviate_name(teams[1])}"
-
                                         new_data.append(
                                             {
                                                 "Date": prediction["Date"],
-                                                "Match": abbreviated_match,
+                                                "Match": match,
                                                 "Toss": prediction["Toss"],
                                                 "Match Winner": prediction["Match Winner"],
                                                 "Time": prediction["Time"],
@@ -223,13 +226,10 @@ else:  # User is logged in, show the main app
                 for user, user_predictions in predictions.items():
                     for match, prediction in user_predictions.items():
                         if prediction["Date"] == selected_date_str:  # Filter by selected date
-                            teams = match.split(" vs ")
-                            abbreviated_match = f"{abbreviate_name(teams[0])} vs {abbreviate_name(teams[1])}"
-
                             all_predictions.append(
                                 {
                                     "User": user,
-                                    "Match": abbreviated_match,
+                                    "Match": match,
                                     "Toss Prediction": prediction["Toss"],
                                     "Match Prediction": prediction["Match Winner"],
                                     "Date": prediction["Date"],
