@@ -241,6 +241,32 @@ else:  # User is logged in, show the main app
                 st.dataframe(predictions_df)  # Display interactive table
             else:
                 st.write("No data available for the selected date.")
+
+            # Display all predictions for the selected date across all users
+            st.subheader(f"All Predictions for {selected_date_str} Across Users")
+            all_predictions = []
+            for user, user_predictions in predictions.items():
+                for match, prediction in user_predictions.items():
+                    if prediction["Date"] == selected_date_str:
+                        abbreviated_match = " vs ".join([abbreviate_name(team) for team in match.split(" vs ")])
+                        all_predictions.append(
+                            {
+                                "User": user,
+                                "Match": abbreviated_match,
+                                "Toss Prediction": prediction["Toss"],
+                                "Match Prediction": prediction["Match Winner"],
+                                "Date": prediction["Date"],
+                                "Time": prediction["Time"],
+                            }
+                        )
+
+            # Create a DataFrame to consolidate all predictions
+            all_predictions_df = pd.DataFrame(all_predictions)
+            
+            if not all_predictions_df.empty:
+                st.dataframe(all_predictions_df)  # Display interactive table
+            else:
+                st.write("No predictions made for the selected date across users.")
     except FileNotFoundError:
         st.error("CSV file not found. Please make sure the URL is correct and the file exists.")
     except Exception as e:
