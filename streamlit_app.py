@@ -77,6 +77,44 @@ def save_shared_predictions(predictions_df):
         st.error(f"Error saving shared predictions: {e}")
         return False
 
+# Function to load user-specific predictions from GitHub
+def load_user_predictions(user_name):
+    try:
+        g = Github(GITHUB_TOKEN)
+        repo = g.get_repo(REPO_NAME)
+        user_file_path = f"predictions_{user_name.lower()}.xlsx"
+        file = repo.get_contents(user_file_path)
+        excel_content = file.decoded_content
+        excel_file = io.BytesIO(excel_content)
+        return pd.read_excel(excel_file)
+    except Exception:
+        # Return an empty DataFrame if file does not exist
+        return pd.DataFrame(columns=["Date", "Match", "Toss", "Match Winner", "Time"])
+
+# Function to save user-specific predictions to GitHub
+def save_user_predictions(user_name, predictions_df):
+    try:
+        g = Github(GITHUB_TOKEN)
+        repo = g.get_repo(REPO_NAME)
+        user_file_path = f"predictions_{user_name.lower()}.xlsx"
+
+        try:
+            file = repo.get_contents(user_file_path)
+            excel_content = io.BytesIO()
+            with pd.ExcelWriter(excel_content, engine="openpyxl") as writer:
+                predictions_df.to_excel(writer, index=False)
+            repo.update_file(user_file_path, "Update user predictions", excel_content.getvalue(), file.sha)
+        except Exception:
+            # If file doesn't exist, create it
+            excel_content = io.BytesIO()
+            with pd.ExcelWriter(excel_content, engine="openpyxl") as writer:
+                predictions_df.to_excel(writer, index=False)
+            repo.create_file(user_file_path, "Create user predictions file", excel_content.getvalue())
+        return True
+    except Exception as e:
+        st.error(f"Error saving user predictions: {e}")
+        return False
+
 # Placeholder for user login
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
@@ -142,6 +180,7 @@ else:  # User is logged in, show the main app
             predictions = st.session_state.predictions
 
             shared_predictions_df = load_shared_predictions()  # Load shared predictions from GitHub
+            user_predictions_df = load_user_predictions(st.session_state.user_name)  # Load user-specific predictions from GitHub
 
             for i, fixture in enumerate(fixtures_on_date):
                 with st.container():
@@ -190,17 +229,51 @@ else:  # User is logged in, show the main app
                                 }
                                 st.session_state.predictions = predictions
 
-                                # Save predictions to GitHub (shared file)
-                                new_shared_prediction = {
-                                    "Date": selected_date_str,
-                                    "Match": fixture,
-                                    "User": st.session_state.user_name,
-                                    "Toss": toss_winner_display,
-                                    "Match Winner": match_winner_display,
-                                    "Time": submission_time_ist,
-                                }
-                                shared_predictions_df = pd.concat([shared_predictions_df, pd.DataFrame([new_shared_prediction])], ignore_index=True)
+                                # Update shared predictions file
+                                existing_shared_index = shared_predictions_df[
+                                    (shared_predictions_df["User"] == st.session_state.user_name) &
+                                    (shared_predictions_df["Match"] == fixture) &
+                                    (shared_predictions_df["Date"] == selected_date_str)
+                                ].index
+
+                                if not existing_shared_index.empty:
+                                    shared_predictions_df.loc[existing_shared_index, ["Toss", "Match Winner", "Time"]] = [
+                                        toss_winner_display, match_winner_display, submission_time_ist
+                                    ]
+                                else:
+                                    new_shared_prediction = {
+                                        "Date": selected_date_str,
+                                        "Match": fixture,
+                                        "User": st.session_state.user_name,
+                                        "Toss": toss_winner_display,
+                                        "Match Winner": match_winner_display,
+                                        "Time": submission_time_ist,
+                                    }
+                                    shared_predictions_df = pd.concat([shared_predictions_df, pd.DataFrame([new_shared_prediction])], ignore_index=True)
+
                                 save_shared_predictions(shared_predictions_df)
+
+                                # Update user-specific predictions file
+                                existing_user_index = user_predictions_df[
+                                    (user_predictions_df["Match"] == fixture) &
+                                    (user_predictions_df["Date"] == selected_date_str)
+                                ].index
+
+                                if not existing_user_index.empty:
+                                    user_predictions_df.loc[existing_user_index, ["Toss", "Match Winner", "Time"]] = [
+                                        toss_winner_display, match_winner_display, submission_time_ist
+                                    ]
+                                else:
+                                    new_user_prediction = {
+                                        "Date": selected_date_str,
+                                        "Match": fixture,
+                                        "Toss": toss_winner_display,
+                                        "Match Winner": match_winner_display,
+                                        "Time": submission_time_ist,
+                                    }
+                                    user_predictions_df = pd.concat([user_predictions_df, pd.DataFrame([new_user_prediction])], ignore_index=True)
+
+                                save_user_predictions(st.session_state.user_name, user_predictions_df)
 
                                 st.success("Prediction submitted!")
 
