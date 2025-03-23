@@ -35,8 +35,47 @@ team_name_mapping = {
 def abbreviate_name(name):
     return team_name_mapping.get(name.strip(), name.strip())
 
-# Placeholder for password reset requests
-password_reset_requests = {}
+# GitHub configuration
+DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+REPO_NAME = "krshnavij/IPL_2025"
+SHARED_PREDICTIONS_FILE = "predictions.xlsx"
+
+# Function to load shared predictions from GitHub
+def load_shared_predictions():
+    try:
+        g = Github(GITHUB_TOKEN)
+        repo = g.get_repo(REPO_NAME)
+        file = repo.get_contents(SHARED_PREDICTIONS_FILE)
+        excel_content = file.decoded_content
+        excel_file = io.BytesIO(excel_content)
+        return pd.read_excel(excel_file)
+    except Exception:
+        # Return an empty DataFrame if file does not exist
+        return pd.DataFrame(columns=["Date", "Match", "User", "Toss", "Match Winner", "Time"])
+
+# Function to save shared predictions to GitHub
+def save_shared_predictions(predictions_df):
+    try:
+        g = Github(GITHUB_TOKEN)
+        repo = g.get_repo(REPO_NAME)
+
+        try:
+            file = repo.get_contents(SHARED_PREDICTIONS_FILE)
+            excel_content = io.BytesIO()
+            with pd.ExcelWriter(excel_content, engine="openpyxl") as writer:
+                predictions_df.to_excel(writer, index=False)
+            repo.update_file(SHARED_PREDICTIONS_FILE, "Update shared predictions", excel_content.getvalue(), file.sha)
+        except Exception:
+            # If file doesn't exist, create it
+            excel_content = io.BytesIO()
+            with pd.ExcelWriter(excel_content, engine="openpyxl") as writer:
+                predictions_df.to_excel(writer, index=False)
+            repo.create_file(SHARED_PREDICTIONS_FILE, "Create shared predictions file", excel_content.getvalue())
+        return True
+    except Exception as e:
+        st.error(f"Error saving shared predictions: {e}")
+        return False
 
 # Placeholder for user login
 if "user_name" not in st.session_state:
@@ -60,15 +99,10 @@ if st.session_state.user_name is None:  # Show login form
         forgot_username = st.text_input("Enter your username to reset password:")
         if st.button("Request Reset"):
             if forgot_username.lower() in [user.lower() for user in user_credentials]:
-                password_reset_requests[forgot_username.lower()] = True
                 st.success("Password reset request sent (placeholder). Check your email (not implemented).")
             else:
                 st.error("Username not found.")
 else:  # User is logged in, show the main app
-    DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
-    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-    REPO_NAME = "krshnavij/IPL_2025"
-
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
     st.title("🏏 IPL PREDICTION 2025")
 
@@ -107,6 +141,8 @@ else:  # User is logged in, show the main app
                 st.session_state.predictions = {}
             predictions = st.session_state.predictions
 
+            shared_predictions_df = load_shared_predictions()  # Load shared predictions from GitHub
+
             for i, fixture in enumerate(fixtures_on_date):
                 with st.container():
                     st.subheader(f"Fixture: {fixture}")
@@ -121,11 +157,9 @@ else:  # User is logged in, show the main app
                     # Determine if the submit button should be disabled based on the match timing
                     disable_submit = False
                     if len(fixtures_on_date) == 1:  # Only one match for the day
-                        # Disable for the 7:30 PM match after 7:00 PM
                         if submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute >= 0):
                             disable_submit = True
                     else:
-                        # Multiple matches for the day
                         if i == 0 and (submission_time_hour > 15 or (submission_time_hour == 15 and submission_time_minute >= 0)):
                             disable_submit = True  # Disable for the 3:30 PM match after 3:00 PM
                         elif i == 1 and (submission_time_hour > 19 or (submission_time_hour == 19 and submission_time_minute >= 0)):
@@ -156,115 +190,25 @@ else:  # User is logged in, show the main app
                                 }
                                 st.session_state.predictions = predictions
 
-                                # Save predictions to GitHub
-                                try:
-                                    g = Github(GITHUB_TOKEN)
-                                    repo = g.get_repo(REPO_NAME)
-
-                                    user_file_path = f"predictions_{st.session_state.user_name.lower()}.xlsx"
-
-                                    try:
-                                        file = repo.get_contents(user_file_path)
-                                        excel_content = file.decoded_content
-                                        excel_file = io.BytesIO(excel_content)
-                                        existing_df = pd.read_excel(excel_file)
-                                    except Exception:
-                                        existing_df = pd.DataFrame()
-
-                                    new_data = []
-                                    for match, prediction in predictions[st.session_state.user_name].items():
-                                        new_data.append(
-                                            {
-                                                "Date": prediction["Date"],
-                                                "Match": match,
-                                                "Toss": prediction["Toss"],
-                                                "Match Winner": prediction["Match Winner"],
-                                                "Time": prediction["Time"],
-                                            }
-                                        )
-                                    new_df = pd.DataFrame(new_data)
-
-                                    if not existing_df.empty:
-                                        merged_df = pd.concat(
-                                            [existing_df, new_df], ignore_index=True
-                                        )
-                                        merged_df = merged_df.drop_duplicates(
-                                            subset=["Match", "Date"], keep="last"
-                                        )
-                                        updated_df = merged_df
-                                    else:
-                                        updated_df = new_df
-
-                                    output = io.BytesIO()
-                                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                                        updated_df.to_excel(writer, index=False)
-
-                                    updated_excel_content = output.getvalue()
-
-                                    try:
-                                        repo.update_file(
-                                            user_file_path,
-                                            "Update predictions",
-                                            updated_excel_content,
-                                            file.sha,
-                                        )
-                                    except Exception:
-                                        repo.create_file(
-                                            user_file_path,
-                                            "Create predictions file",
-                                            updated_excel_content,
-                                        )
-
-                                    st.success("Prediction submitted!")
-                                except Exception as e:
-                                    st.error(f"Error updating predictions: {e}")
-
-            if predictions:
-                st.subheader(f"Predictions for {selected_date_str}")
-                all_predictions = []
-                for user, user_predictions in predictions.items():
-                    for match, prediction in user_predictions.items():
-                        if prediction["Date"] == selected_date_str:
-                            abbreviated_match = " vs ".join([abbreviate_name(team) for team in match.split(" vs ")])
-                            all_predictions.append(
-                                {
-                                    "User": user,
-                                    "Match": abbreviated_match,
-                                    "Toss Prediction": prediction["Toss"],
-                                    "Match Prediction": prediction["Match Winner"],
-                                    "Date": prediction["Date"],
-                                    "Time": prediction["Time"],
+                                # Save predictions to GitHub (shared file)
+                                new_shared_prediction = {
+                                    "Date": selected_date_str,
+                                    "Match": fixture,
+                                    "User": st.session_state.user_name,
+                                    "Toss": toss_winner_display,
+                                    "Match Winner": match_winner_display,
+                                    "Time": submission_time_ist,
                                 }
-                            )
+                                shared_predictions_df = pd.concat([shared_predictions_df, pd.DataFrame([new_shared_prediction])], ignore_index=True)
+                                save_shared_predictions(shared_predictions_df)
 
-                predictions_df = pd.DataFrame(all_predictions)
-                st.dataframe(predictions_df)  # Display interactive table
-            else:
-                st.write("No data available for the selected date.")
+                                st.success("Prediction submitted!")
 
             # Display all predictions for the selected date across all users
             st.subheader(f"All Predictions for {selected_date_str} Across Users")
-            all_predictions = []
-            for user, user_predictions in predictions.items():
-                for match, prediction in user_predictions.items():
-                    if prediction["Date"] == selected_date_str:
-                        abbreviated_match = " vs ".join([abbreviate_name(team) for team in match.split(" vs ")])
-                        all_predictions.append(
-                            {
-                                "User": user,
-                                "Match": abbreviated_match,
-                                "Toss Prediction": prediction["Toss"],
-                                "Match Prediction": prediction["Match Winner"],
-                                "Date": prediction["Date"],
-                                "Time": prediction["Time"],
-                            }
-                        )
-
-            # Create a DataFrame to consolidate all predictions
-            all_predictions_df = pd.DataFrame(all_predictions)
-            
-            if not all_predictions_df.empty:
-                st.dataframe(all_predictions_df)  # Display interactive table
+            shared_predictions_for_date = shared_predictions_df[shared_predictions_df["Date"] == selected_date_str]
+            if not shared_predictions_for_date.empty:
+                st.dataframe(shared_predictions_for_date)
             else:
                 st.write("No predictions made for the selected date across users.")
     except FileNotFoundError:
