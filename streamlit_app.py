@@ -31,9 +31,11 @@ team_name_mapping = {
     "Gujarat Titans": "GT",
 }
 
+
 # Helper function to abbreviate team names
 def abbreviate_name(name):
     return team_name_mapping.get(name.strip(), name.strip())
+
 
 # GitHub configuration
 DATA_URL = "https://raw.githubusercontent.com/krshnavij/IPL_2025/main/IPL_2025.csv"
@@ -49,10 +51,15 @@ def load_shared_predictions():
         file = repo.get_contents(SHARED_PREDICTIONS_FILE)
         excel_content = file.decoded_content
         excel_file = io.BytesIO(excel_content)
-        return pd.read_excel(excel_file)
+        predictions_df = pd.read_excel(excel_file)
+        if predictions_df.empty:
+            # Initialize with required columns if the file is empty
+            predictions_df = pd.DataFrame(columns=["Date", "Match", "User", "Toss", "Match Winner", "Time"])
+        return predictions_df
     except Exception:
-        # Return an empty DataFrame if file does not exist
+        # Return an empty DataFrame with required columns if file does not exist
         return pd.DataFrame(columns=["Date", "Match", "User", "Toss", "Match Winner", "Time"])
+
 
 # Function to save shared predictions to GitHub
 def save_shared_predictions(predictions_df):
@@ -77,6 +84,7 @@ def save_shared_predictions(predictions_df):
         st.error(f"Error saving shared predictions: {e}")
         return False
 
+
 # Function to load user-specific predictions from GitHub
 def load_user_predictions(user_name):
     try:
@@ -86,10 +94,15 @@ def load_user_predictions(user_name):
         file = repo.get_contents(user_file_path)
         excel_content = file.decoded_content
         excel_file = io.BytesIO(excel_content)
-        return pd.read_excel(excel_file)
+        predictions_df = pd.read_excel(excel_file)
+        if predictions_df.empty:
+            # Initialize with required columns if the file is empty
+            predictions_df = pd.DataFrame(columns=["Date", "Match", "Toss", "Match Winner", "Time"])
+        return predictions_df
     except Exception:
-        # Return an empty DataFrame if file does not exist
+        # Return an empty DataFrame with required columns if file does not exist
         return pd.DataFrame(columns=["Date", "Match", "Toss", "Match Winner", "Time"])
+
 
 # Function to save user-specific predictions to GitHub
 def save_user_predictions(user_name, predictions_df):
@@ -114,6 +127,7 @@ def save_user_predictions(user_name, predictions_df):
     except Exception as e:
         st.error(f"Error saving user predictions: {e}")
         return False
+
 
 # Placeholder for user login
 if "user_name" not in st.session_state:
@@ -146,9 +160,7 @@ else:  # User is logged in, show the main app
 
     # Freeze the date input to today's date
     selected_date = st.date_input(
-        "Select a date to filter the data",
-        value=date.today(),
-        disabled=True
+        "Select a date to filter the data", value=date.today(), disabled=True
     )
 
     def parse_date(date_str):
@@ -217,17 +229,6 @@ else:  # User is logged in, show the main app
                             elif submitted:
                                 submission_time_ist = ist_time.strftime("%H:%M:%S")
                                 selected_date_str = pd.to_datetime(selected_date).strftime("%d-%m-%Y")
-
-                                # Update predictions only if submission is valid
-                                if st.session_state.user_name not in predictions:
-                                    predictions[st.session_state.user_name] = {}
-                                predictions[st.session_state.user_name][fixture] = {
-                                    "Toss": toss_winner_display,
-                                    "Match Winner": match_winner_display,
-                                    "Date": selected_date_str,
-                                    "Time": submission_time_ist,
-                                }
-                                st.session_state.predictions = predictions
 
                                 # Update shared predictions file
                                 existing_shared_index = shared_predictions_df[
