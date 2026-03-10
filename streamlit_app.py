@@ -7,7 +7,7 @@ from datetime import datetime, date, timedelta
 # Placeholder for user credentials
 user_credentials = {
     "vijay": "nila",
-    "nandini": "secret",
+    "nandini": "vmjk",
     "sanjay": "tvk",
     "mohan": "kumar",
     "ajay": "ruby",
