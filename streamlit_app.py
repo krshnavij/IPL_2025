@@ -15,6 +15,7 @@ user_credentials = {
     "karunya": "balyam",
     "apoorva": "vasantha",
     "priya": "mythili",
+    "dharma": "snart",
 }
 
 # Team name abbreviations
