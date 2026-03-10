@@ -156,7 +156,7 @@ if st.session_state.user_name is None:  # Show login form
                 st.error("Username not found.")
 else:  # User is logged in, show the main app
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
-    st.title("🏏 IPL PREDICTION 2025")
+    st.title("🏏 IPL PREDICTION 2026")
 
     # Freeze the date input to today's date
     selected_date = st.date_input(
