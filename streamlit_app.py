@@ -160,11 +160,11 @@ else:  # User is logged in, show the main app
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
     st.title("🏏 IPL PREDICTION 2026")
 
-# Enable date input only for 'vijay', else keep it disabled
+# Date input enabled for everyone
 selected_date = st.date_input(
-    "Select a date to filter the data",
-    value=date.today(),
-    disabled=False if st.session_state.user_name.lower() == "vijay" else True
+    "Select a date to filter the data", 
+    value=date.today(), 
+    disabled=False
 )
 
     def parse_date(date_str):
