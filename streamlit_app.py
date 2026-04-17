@@ -163,8 +163,7 @@ else:  # User is logged in, show the main app
 # Date input enabled for everyone
 selected_date = st.date_input(
     "Select a date to filter the data", 
-    value=date.today(), 
-    disabled=False
+    value=date.today()
 )
 
     def parse_date(date_str):
