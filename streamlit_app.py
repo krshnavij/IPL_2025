@@ -166,11 +166,11 @@ selected_date = st.date_input(
     value=date.today()
 )
 
-    def parse_date(date_str):
-        try:
-            return pd.to_datetime(date_str, format="%d-%m-%Y")
-        except ValueError:
-            return pd.NaT
+def parse_date(date_str):        
+    try:
+        return pd.to_datetime(date_str, format="%d-%m-%Y")
+    except ValueError:
+        return pd.NaT
 
     try:
         data = pd.read_csv(DATA_URL)
