@@ -160,17 +160,16 @@ else:  # User is logged in, show the main app
     st.set_page_config(page_title="IPL PREDICTION COMPETITION", page_icon="📈")
     st.title("🏏 IPL PREDICTION 2026")
 
-# Date input enabled for everyone
-selected_date = st.date_input(
-    "Select a date to filter the data", 
-    value=date.today()
-)
+    # Freeze the date input to today's date
+    selected_date = st.date_input(
+        "Select a date to filter the data", value=date.today(), disabled=True
+    )
 
-def parse_date(date_str):        
-    try:
-        return pd.to_datetime(date_str, format="%d-%m-%Y")
-    except ValueError:
-        return pd.NaT
+    def parse_date(date_str):
+        try:
+            return pd.to_datetime(date_str, format="%d-%m-%Y")
+        except ValueError:
+            return pd.NaT
 
     try:
         data = pd.read_csv(DATA_URL)
